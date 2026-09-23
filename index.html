@@ -8,55 +8,40 @@
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
 
-  /* INTRO CON PARPADEO QUE NUNCA SE TRABA */
-  #introScreen {
-    position: fixed; inset: 0; z-index: 99999; background: #000;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer; pointer-events: auto;
-  }
-
-  .intro-content {
-    display: flex; flex-direction: column; align-items: center;
-    animation: blinkGarena 1.2s infinite alternate ease-in-out;
-  }
-
-  .intro-logo {
-    font-size: 4.5rem; font-weight: 900;
-    background: linear-gradient(135deg, #ff0055, #ffcc00, #00ffcc);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 25px rgba(255, 0, 85, 0.6);
-    letter-spacing: 2px;
-  }
-
-  .intro-sub {
-    font-size: 1.3rem; color: #aaa; letter-spacing: 8px; margin-top: -5px; font-weight: bold;
-  }
-
-  @keyframes blinkGarena {
-    0% { opacity: 0.3; transform: scale(0.97); }
-    100% { opacity: 1; transform: scale(1.03); }
-  }
-
-  /* LOBBY */
+  /* LOBBY / MENU PRINCIPAL DIRECTO */
   #lobbyScreen {
     position: absolute; inset: 0; z-index: 100;
     background: radial-gradient(circle, #1d3557 0%, #0b132b 100%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
 
+  /* LOGO CON PARPADEO SUAVE DENTRO DEL MENU */
+  .brand-logo {
+    font-size: 2rem; font-weight: 900;
+    background: linear-gradient(135deg, #ff0055, #ffcc00, #00ffcc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: 2px; margin-bottom: 5px;
+    animation: blinkVM 1.2s infinite alternate ease-in-out;
+  }
+
+  @keyframes blinkVM {
+    0% { opacity: 0.4; transform: scale(0.98); }
+    100% { opacity: 1; transform: scale(1.02); }
+  }
+
   .slither-title {
-    font-size: 2.5rem; font-weight: 900; color: #fff;
+    font-size: 2.2rem; font-weight: 900; color: #fff;
     text-shadow: 0 4px 0 #000, 0 0 15px rgba(255,255,255,0.3);
     letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase;
   }
 
   .avatar-container {
-    position: relative; width: 130px; height: 130px; margin-bottom: 20px;
+    position: relative; width: 120px; height: 120px; margin-bottom: 20px;
     display: flex; align-items: center; justify-content: center;
   }
 
   .avatar-preview {
-    width: 120px; height: 120px; border-radius: 50%;
+    width: 110px; height: 110px; border-radius: 50%;
     border: 4px solid #fff; box-shadow: 0 8px 25px rgba(0,0,0,0.6);
     background-size: cover; background-position: center; position: relative;
     background-color: #333;
@@ -82,7 +67,7 @@
     background: rgba(255,255,255,0.15); color: #fff; font-weight: bold; cursor: pointer;
   }
 
-  /* HUD */
+  /* HUD INTERFAZ */
   #gameHUD {
     position: absolute; top: 15px; left: 15px; z-index: 50; display: none;
     color: #fff; font-weight: bold; font-size: 1.1rem; text-shadow: 0 2px 4px #000;
@@ -99,7 +84,7 @@
 
   .ammo-display { margin-top: 6px; font-size: 1rem; color: #f59e0b; font-weight: 900; }
 
-  /* CONTROLES */
+  /* CONTROLES TÁCTILES */
   #joystickZone {
     position: absolute; bottom: 25px; left: 25px; z-index: 50; display: none;
     width: 120px; height: 120px; background: rgba(255,255,255,0.15);
@@ -132,16 +117,9 @@
 </head>
 <body>
 
-  <!-- INTRO VM STUDIOS -->
-  <div id="introScreen" onclick="forceRemoveIntro()" ontouchstart="forceRemoveIntro()">
-    <div class="intro-content">
-      <div class="intro-logo">VM</div>
-      <div class="intro-sub">STUDIOS</div>
-    </div>
-  </div>
-
-  <!-- LOBBY -->
+  <!-- ENTRADA DIRECTA AL MENU -->
   <div id="lobbyScreen">
+    <div class="brand-logo">VM STUDIOS</div>
     <div class="slither-title">Countryballs War</div>
     
     <div class="avatar-container">
@@ -154,7 +132,7 @@
     <button class="btn-skin" id="btnChangeSkin">Cambiar Ball</button>
   </div>
 
-  <!-- HUD -->
+  <!-- HUD EN JUEGO -->
   <div id="gameHUD">
     <div id="levelDisplay">Nivel: 1</div>
     <div class="health-bar">
@@ -179,22 +157,6 @@
   <canvas id="gameCanvas"></canvas>
 
 <script>
-  // REMOVER INTRO GARANTIZADO
-  let introRemoved = false;
-  function forceRemoveIntro() {
-    if(introRemoved) return;
-    introRemoved = true;
-    const el = document.getElementById('introScreen');
-    if(el) {
-      el.style.display = 'none';
-      el.remove();
-    }
-  }
-
-  // Se quita automáticamente en 2.5 segundos
-  setTimeout(forceRemoveIntro, 2500);
-
-  // SONIDO EN EL JUEGO
   let audioCtx = null;
   function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -215,7 +177,6 @@
     } catch(e){}
   }
 
-  // BANDERAS
   const skins = [
     { name: 'Portugal', flag: 'https://flagcdn.com/w320/pt.png' },
     { name: 'Brasil', flag: 'https://flagcdn.com/w320/br.png' },
@@ -275,7 +236,6 @@
   document.getElementById('btnPlayGame').addEventListener('click', enterGame);
 
   function enterGame() {
-    forceRemoveIntro();
     initAudio();
     playSound(450, 0.1);
     document.getElementById('lobbyScreen').style.display = 'none';
@@ -621,4 +581,37 @@
         for(let bIdx = botBalls.length - 1; bIdx >= 0; bIdx--) {
           let bot = botBalls[bIdx];
           if(Math.hypot(b.x - bot.x, b.y - bot.y) < bot.radius) {
-            bot.hp -= 
+            bot.hp -= 15;
+            createExplosion(bot.x, bot.y, '#ffcc00');
+            bullets.splice(i, 1);
+            
+            if(bot.hp <= 0) {
+              createExplosion(bot.x, bot.y, '#ff0055');
+              botBalls.splice(bIdx, 1);
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    if(botBalls.length === 0) {
+      gameLevel++;
+      document.getElementById('levelDisplay').innerText = `Nivel: ${gameLevel}`;
+      spawnFood();
+      spawnBots();
+    }
+
+    for(let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.life--;
+      if(p.life <= 0) particles.splice(i, 1);
+    }
+
+    document.getElementById('healthFill').style.width = `${Math.max(0, (player.hp / player.maxHp)*100)}%`;
+    document.getElementById('healthText').innerText = `${Math.max(0, Math.floor(player.hp))} / ${player.maxHp} HP`;
+    
+    if(player.isReloading) {
+      document.getElementById('ammoDisplay').innerText = `RECARGANDO...`;
+    } else {
+      document.getE
