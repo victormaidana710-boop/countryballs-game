@@ -2,250 +2,331 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>COUNTRYBALLS WAR ONLINE - VM</title>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <style>
-  :root {
-    --primary: #4e73df;
-    --accent: #7cff4a;
-    --panel: rgba(15, 23, 42, 0.85);
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    background: #000; overflow: hidden;
-    font-family: 'Segoe UI', Arial, sans-serif; color: #fff;
-  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b132b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
-  /* PANTALLA INTRO ESTILO GARENA */
+  /* PANTALLA INTRO VM STUDIOS */
   #introScreen {
-    position: absolute; inset: 0; z-index: 1000;
-    background: #000;
+    position: absolute; inset: 0; z-index: 9999; background: #000;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    opacity: 1; transition: opacity 0.8s ease-out;
-    cursor: pointer;
+    color: #fff; cursor: pointer; transition: opacity 0.8s;
   }
-  .intro-logo {
-    font-size: 4rem; font-weight: 900; letter-spacing: 4px;
-    background: linear-gradient(135deg, #ff0055, #ffcc00, #00ffcc);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 20px rgba(255,0,85,0.5);
-    animation: zoomIn 1.5s ease-out;
-  }
-  .intro-sub {
-    font-size: 1.2rem; color: #888; letter-spacing: 6px; margin-top: 10px;
-    animation: fadeIn 2s ease-out;
-  }
-  .intro-hint {
-    margin-top: 30px; font-size: 0.9rem; color: #666;
+  .intro-logo { font-size: 4rem; font-weight: 900; background: linear-gradient(135deg, #ff0055, #ffcc00, #00ffcc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 20px rgba(255,0,85,0.4); }
+  .intro-sub { font-size: 1.2rem; color: #888; letter-spacing: 6px; margin-top: 5px; }
+  .intro-hint { margin-top: 40px; font-size: 0.9rem; color: #555; animation: blink 1.5s infinite; }
+
+  @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+  /* LOBBY INTERFAZ SLITHER.IO CON FONDO AZUL */
+  #lobbyScreen {
+    position: absolute; inset: 0; z-index: 100;
+    background: radial-gradient(circle, #1d3557 0%, #0b132b 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
 
-  @keyframes zoomIn {
-    0% { transform: scale(0.5); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  @keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
+  .slither-title {
+    font-size: 3rem; font-weight: 900; color: #fff;
+    text-shadow: 0 5px 0 #000, 0 0 20px rgba(255,255,255,0.3);
+    letter-spacing: 2px; margin-bottom: 25px; text-transform: uppercase;
   }
 
-  /* CONTENEDOR PRINCIPAL Y PANTALLAS */
-  .screen {
-    position: absolute; inset: 0; display: none;
-    flex-direction: column; align-items: center; justify-content: center;
-    background: radial-gradient(circle, #1a202c 0%, #0f172a 100%);
-  }
-  .screen.active { display: flex; }
-
-  .panel {
-    background: var(--panel); border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 16px; padding: 24px; width: 90%; max-width: 420px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
-    text-align: center;
+  .avatar-container {
+    position: relative; width: 150px; height: 150px; margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: center;
   }
 
-  h1 { margin: 0 0 15px; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; }
-  
-  .btn {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: #fff; border: none; padding: 12px 20px; border-radius: 8px;
-    font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%;
-    margin-top: 10px; transition: transform 0.1s, filter 0.2s;
-  }
-  .btn:active { transform: scale(0.97); }
-  .btn-accent { background: linear-gradient(135deg, #10b981, #047857); }
-
-  input {
-    width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3);
-    color: #fff; text-align: center; font-size: 1rem; outline: none;
+  .avatar-preview {
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 5px solid #000; box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+    background-size: cover; background-position: center; position: relative;
   }
 
-  /* LOBBY / SKIN SELECTOR */
-  .skin-preview {
-    width: 120px; height: 120px; border-radius: 50%; margin: 15px auto;
-    border: 4px solid #fff; box-shadow: 0 0 15px rgba(255,255,255,0.3);
-    background-size: cover; background-position: center; transition: transform 0.2s;
+  .input-nick {
+    width: 260px; padding: 12px; border-radius: 25px; border: 3px solid #4cc9f0;
+    background: rgba(0,0,0,0.6); color: #fff; text-align: center;
+    font-size: 1.2rem; font-weight: bold; outline: none; margin-bottom: 15px;
   }
 
-  /* JUEGO CANVAS */
-  #gameCanvas {
-    width: 100%; height: 100%; display: block; background: #111827;
+  .btn-play {
+    width: 240px; padding: 14px; border-radius: 30px; border: none;
+    background: linear-gradient(135deg, #2ec4b6, #0f9f90);
+    color: #fff; font-size: 1.3rem; font-weight: 900; cursor: pointer;
+    box-shadow: 0 6px 0 #0a665c, 0 10px 20px rgba(0,0,0,0.4);
+    transition: transform 0.1s; margin-bottom: 12px;
   }
-  #uiOverlay {
-    position: absolute; top: 10px; left: 10px; right: 10px;
-    display: flex; justify-content: space-between; pointer-events: none;
+  .btn-play:active { transform: translateY(4px); box-shadow: 0 2px 0 #0a665c; }
+
+  .btn-skin {
+    padding: 10px 24px; border-radius: 20px; border: 2px solid #fff;
+    background: rgba(255,255,255,0.15); color: #fff; font-weight: bold; cursor: pointer;
   }
-  .hud-box {
-    background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 8px;
-    font-weight: bold; border: 1px solid rgba(255,255,255,0.2);
-  }
+
+  /* CANVAS DEL JUEGO */
+  #gameCanvas { width: 100%; height: 100%; display: block; background: #0b132b; }
 </style>
 </head>
 <body>
 
-  <!-- PANTALLA INTRO -->
-  <div id="introScreen" onclick="finishIntro()">
+  <!-- INTRO VM STUDIOS -->
+  <div id="introScreen" onclick="startApp()">
     <div class="intro-logo">VM</div>
     <div class="intro-sub">STUDIOS</div>
     <div class="intro-hint">Toca la pantalla para continuar</div>
   </div>
 
-  <!-- PANTALLA LOBBY -->
-  <div id="screenLobby" class="screen">
-    <div class="panel">
-      <h1>Countryballs War</h1>
-      <p style="color: #aaa; font-size: 0.9rem;">Elige tu jugador y entra a la batalla</p>
-      
-      <input type="text" id="nicknameInput" placeholder="Tu Nombre de Jugador" maxlength="12" value="Player1">
-      
-      <div id="skinPreview" class="skin-preview"></div>
-      <button class="btn" onclick="changeSkin()">Cambiar Skin</button>
-
-      <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
-
-      <button class="btn btn-accent" onclick="startGame()">JUGAR SOLO</button>
+  <!-- LOBBY PRINCIPAL ESTILO SLITHER -->
+  <div id="lobbyScreen" style="display: none;">
+    <div class="slither-title">Countryballs War</div>
+    
+    <div class="avatar-container">
+      <div id="avatarPreview" class="avatar-preview"></div>
     </div>
+    
+    <input type="text" id="nickInput" class="input-nick" value="Player 1" maxlength="12">
+    
+    <button class="btn-play" onclick="enterGame()">PLAY GAME</button>
+    <button class="btn-skin" onclick="nextSkin()">Cambiar Ball</button>
   </div>
 
-  <!-- PANTALLA JUEGO -->
-  <div id="screenGame" class="screen">
-    <div id="uiOverlay">
-      <div class="hud-box" id="hudName">Jugador</div>
-      <div class="hud-box" id="hudScore">Puntos: 0</div>
-    </div>
-    <canvas id="gameCanvas"></canvas>
-  </div>
+  <!-- CANVAS JUEGO -->
+  <canvas id="gameCanvas"></canvas>
 
 <script>
-  // AUDIO SYNTH
+  // AUDIO
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playSound(freq, duration) {
+  function playClick() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     try {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
+      osc.frequency.value = 450;
       gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     } catch(e){}
   }
 
-  // CONTROL INTRO
-  let introFinished = false;
-  function finishIntro() {
-    if (introFinished) return;
-    introFinished = true;
-    playSound(440, 0.2);
+  // INTRO LOGIC
+  function startApp() {
+    playClick();
     const intro = document.getElementById('introScreen');
     intro.style.opacity = '0';
     setTimeout(() => {
       intro.style.display = 'none';
-      showScreen('screenLobby');
+      document.getElementById('lobbyScreen').style.display = 'flex';
     }, 800);
   }
 
-  // Auto-avanzar intro tras 2.5 segundos
-  setTimeout(finishIntro, 2500);
-
-  // MANEJO DE PANTALLAS
-  const screens = {
-    screenLobby: document.getElementById('screenLobby'),
-    screenGame: document.getElementById('screenGame')
-  };
-
-  function showScreen(name) {
-    Object.values(screens).forEach(s => s.classList.remove('active'));
-    screens[name].classList.add('active');
-  }
-
-  // SKINS Y SELECCION
+  // BANDERAS DE LAS IMÁGENES (COUNTRYBALLS)
   const skins = [
-    'https://flagcdn.com/w160/ar.png', // Argentina
-    'https://flagcdn.com/w160/br.png', // Brasil
-    'https://flagcdn.com/w160/mx.png', // México
-    'https://flagcdn.com/w160/es.png', // España
-    'https://flagcdn.com/w160/us.png'  // EE.UU.
+    { name: 'Portugal', flag: 'https://flagcdn.com/w320/pt.png' },
+    { name: 'Brasil', flag: 'https://flagcdn.com/w320/br.png' },
+    { name: 'Argentina', flag: 'https://flagcdn.com/w320/ar.png' },
+    { name: 'Uruguay', flag: 'https://flagcdn.com/w320/uy.png' },
+    { name: 'Chile', flag: 'https://flagcdn.com/w320/cl.png' },
+    { name: 'Colombia', flag: 'https://flagcdn.com/w320/co.png' },
+    { name: 'México', flag: 'https://flagcdn.com/w320/mx.png' },
+    { name: 'USA', flag: 'https://flagcdn.com/w320/us.png' },
+    { name: 'España', flag: 'https://flagcdn.com/w320/es.png' },
+    { name: 'Canadá', flag: 'https://flagcdn.com/w320/ca.png' }
   ];
-  let currentSkinIdx = 0;
-  const skinPreview = document.getElementById('skinPreview');
+  let skinIdx = 0;
 
-  function updateSkinPreview() {
-    skinPreview.style.backgroundImage = `url(${skins[currentSkinIdx]})`;
+  const avatarPreview = document.getElementById('avatarPreview');
+  function updateAvatar() {
+    avatarPreview.style.backgroundImage = `url(${skins[skinIdx].flag})`;
   }
-  function changeSkin() {
-    currentSkinIdx = (currentSkinIdx + 1) % skins.length;
-    updateSkinPreview();
-    playSound(600, 0.1);
+  function nextSkin() {
+    playClick();
+    skinIdx = (skinIdx + 1) % skins.length;
+    updateAvatar();
   }
-  updateSkinPreview();
+  updateAvatar();
 
-  // BUCLE DE JUEGO BASICO
+  // MOTOR DE JUEGO (SLITHER STYLE PERO SOLO CON BALLS Y OJOS)
   let canvas, ctx;
-  let player = { x: 100, y: 100, radius: 25, speed: 4 };
-  let keys = {};
+  let inGame = false;
+  let player = { x: 0, y: 0, radius: 35, vx: 0, vy: 0, img: new Image(), angle: 0 };
+  let mouse = { x: 0, y: 0 };
+  let foodList = [];
+  let botBalls = [];
 
-  function startGame() {
-    playSound(800, 0.2);
-    showScreen('screenGame');
+  // CARGA DE IMÁGENES
+  const loadedImages = {};
+  skins.forEach(s => {
+    const img = new Image();
+    img.src = s.flag;
+    loadedImages[s.name] = img;
+  });
+
+  function enterGame() {
+    playClick();
+    document.getElementById('lobbyScreen').style.display = 'none';
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    document.getElementById('hudName').innerText = document.getElementById('nicknameInput').value || 'Jugador';
+    player.img = loadedImages[skins[skinIdx].name];
+    player.x = 0;
+    player.y = 0;
+    mouse.x = canvas.width / 2;
+    mouse.y = canvas.height / 2;
 
-    window.addEventListener('keydown', e => keys[e.key] = true);
-    window.addEventListener('keyup', e => keys[e.key] = false);
+    // Generar comida brillante
+    foodList = [];
+    for(let i = 0; i < 150; i++) {
+      foodList.push({
+        x: (Math.random() - 0.5) * 3000,
+        y: (Math.random() - 0.5) * 3000,
+        r: 5 + Math.random() * 5,
+        color: `hsl(${Math.random()*360}, 90%, 65%)`
+      });
+    }
 
-    requestAnimationFrame(gameLoop);
+    // Generar otras Countryballs enemigas (Bots) en vez de gusanos
+    botBalls = [];
+    for(let i = 0; i < 15; i++) {
+      let randomSkin = skins[Math.floor(Math.random() * skins.length)];
+      botBalls.push({
+        x: (Math.random() - 0.5) * 3000,
+        y: (Math.random() - 0.5) * 3000,
+        radius: 30 + Math.random() * 15,
+        img: loadedImages[randomSkin.name],
+        vx: (Math.random() - 0.5) * 3,
+        vy: (Math.random() - 0.5) * 3,
+        angle: 0
+      });
+    }
+
+    window.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener('touchmove', e => {
+      if(e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }
+    }, {passive: true});
+
+    inGame = true;
+    requestAnimationFrame(loop);
   }
 
-  function gameLoop() {
-    if (keys['ArrowUp'] || keys['w']) player.y -= player.speed;
-    if (keys['ArrowDown'] || keys['s']) player.y += player.speed;
-    if (keys['ArrowLeft'] || keys['a']) player.x -= player.speed;
-    if (keys['ArrowRight'] || keys['d']) player.x += player.speed;
+  // DIBUJAR OJOS CLÁSICOS COUNTRYBALLS EN CUALQUIER BOLA
+  function drawCountryball(x, y, radius, img, angle) {
+    ctx.save();
+    ctx.translate(x, y);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Dibujar Jugador
+    // Dibuja la pelota con la bandera
     ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#3b82f6';
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 3;
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.clip();
+    if(img.complete) {
+      ctx.drawImage(img, -radius, -radius, radius * 2, radius * 2);
+    } else {
+      ctx.fillStyle = '#333'; ctx.fill();
+    }
+    ctx.restore();
+
+    // Borde grueso estilo cómic
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4;
     ctx.stroke();
 
-    requestAnimationFrame(gameLoop);
+    // Dibuja los ojos blancos mirando hacia la dirección del movimiento
+    let eyeOffsetX = Math.cos(angle) * (radius * 0.3);
+    let eyeOffsetY = Math.sin(angle) * (radius * 0.3);
+
+    // Ojo Izquierdo
+    ctx.beginPath();
+    ctx.ellipse(eyeOffsetX - radius*0.2, eyeOffsetY - radius*0.05, radius*0.22, radius*0.28, angle, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.strokeStyle = '#000000'; ctx.lineWidth = 3; ctx.stroke();
+
+    // Ojo Derecho
+    ctx.beginPath();
+    ctx.ellipse(eyeOffsetX + radius*0.2, eyeOffsetY - radius*0.05, radius*0.22, radius*0.28, angle, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.strokeStyle = '#000000'; ctx.lineWidth = 3; ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function loop() {
+    if(!inGame) return;
+
+    // Dirección del jugador hacia el puntero
+    let dx = mouse.x - canvas.width / 2;
+    let dy = mouse.y - canvas.height / 2;
+    player.angle = Math.atan2(dy, dx);
+    
+    let dist = Math.hypot(dx, dy);
+    if (dist > 10) {
+      player.x += Math.cos(player.angle) * 4;
+      player.y += Math.sin(player.angle) * 4;
+    }
+
+    // Mover bots (Countryballs enemigas)
+    botBalls.forEach(bot => {
+      bot.x += bot.vx;
+      bot.y += bot.vy;
+      bot.angle = Math.atan2(bot.vy, bot.vx);
+
+      // Rebotar en bordes distantes
+      if(Math.abs(bot.x) > 1800) bot.vx *= -1;
+      if(Math.abs(bot.y) > 1800) bot.vy *= -1;
+    });
+
+    // RENDERIZADO (CÁMARA CENTRADA EN EL JUGADOR)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Fondo Cuadrícula / Malla Slither
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    let gridOffsetX = (-player.x + canvas.width/2) % 60;
+    let gridOffsetY = (-player.y + canvas.height/2) % 60;
+    
+    for (let x = gridOffsetX; x < canvas.width; x += 60) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = gridOffsetY; y < canvas.height; y += 60) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // Render Comida
+    foodList.forEach(f => {
+      let screenX = f.x - player.x + canvas.width/2;
+      let screenY = f.y - player.y + canvas.height/2;
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, f.r, 0, Math.PI*2);
+      ctx.fillStyle = f.color;
+      ctx.fill();
+    });
+
+    // Render Countryballs Enemigas (Bots)
+    botBalls.forEach(bot => {
+      let screenX = bot.x - player.x + canvas.width/2;
+      let screenY = bot.y - player.y + canvas.height/2;
+      drawCountryball(screenX, screenY, bot.radius, bot.img, bot.angle);
+    });
+
+    // Render Jugador Principal
+    drawCountryball(canvas.width/2, canvas.height/2, player.radius, player.img, player.angle);
+
+    requestAnimationFrame(loop);
   }
 </script>
 </body>
