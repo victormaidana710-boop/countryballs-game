@@ -9,7 +9,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #0b132b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
-  /* PANTALLA INTRO VM STUDIOS */
+  /* INTRO VM STUDIOS */
   #introScreen {
     position: absolute; inset: 0; z-index: 9999; background: #000;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -21,7 +21,7 @@
 
   @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-  /* LOBBY INTERFAZ SLITHER.IO CON FONDO AZUL */
+  /* LOBBY SLITHER */
   #lobbyScreen {
     position: absolute; inset: 0; z-index: 100;
     background: radial-gradient(circle, #1d3557 0%, #0b132b 100%);
@@ -65,9 +65,18 @@
     background: rgba(255,255,255,0.15); color: #fff; font-weight: bold; cursor: pointer;
   }
 
-  /* CANVAS Y HUDS */
-  #gameCanvas { width: 100%; height: 100%; display: block; background: #0b132b; }
+  /* HUD DEL JUEGO */
+  #gameHUD {
+    position: absolute; top: 20px; left: 20px; z-index: 50; display: none;
+    color: #fff; font-weight: bold; font-size: 1.2rem;
+  }
+  .health-bar {
+    width: 200px; height: 20px; background: rgba(0,0,0,0.5);
+    border: 2px solid #fff; border-radius: 10px; overflow: hidden; margin-top: 5px;
+  }
+  .health-fill { width: 100%; height: 100%; background: #22c55e; transition: width 0.2s; }
 
+  /* CONTROLES TÁCTILES */
   #gameControls {
     position: absolute; bottom: 20px; right: 20px; z-index: 50;
     display: none; gap: 15px;
@@ -82,6 +91,8 @@
   .btn-shoot { background: rgba(239, 68, 68, 0.8); }
   .btn-build { background: rgba(59, 130, 246, 0.8); }
   .control-btn:active { transform: scale(0.9); }
+
+  #gameCanvas { width: 100%; height: 100%; display: block; background: #0b132b; }
 </style>
 </head>
 <body>
@@ -93,7 +104,7 @@
     <div class="intro-hint">Toca la pantalla para continuar</div>
   </div>
 
-  <!-- LOBBY PRINCIPAL ESTILO SLITHER -->
+  <!-- LOBBY SLITHER -->
   <div id="lobbyScreen" style="display: none;">
     <div class="slither-title">Countryballs War</div>
     
@@ -107,49 +118,39 @@
     <button class="btn-skin" onclick="nextSkin()">Cambiar Ball</button>
   </div>
 
-  <!-- CONTROLES TÁCTILES DEL JUEGO -->
+  <!-- HUD -->
+  <div id="gameHUD">
+    <div id="levelDisplay">Nivel: 1</div>
+    <div class="health-bar"><div id="healthFill" class="health-fill"></div></div>
+  </div>
+
+  <!-- CONTROLES TÁCTILES -->
   <div id="gameControls">
     <div class="control-btn btn-build" onclick="buildStructure()">MURO</div>
     <div class="control-btn btn-shoot" onclick="shootBullet()">FUEGO</div>
   </div>
 
-  <!-- CANVAS JUEGO -->
   <canvas id="gameCanvas"></canvas>
 
 <script>
   // AUDIO
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playClick() {
+  function playSound(freq, duration, type='sine') {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     try {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.frequency.value = 450;
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
       gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
       osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+      osc.start(); osc.stop(audioCtx.currentTime + duration);
     } catch(e){}
   }
 
-  function playShootSound() {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    try {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-    } catch(e){}
-  }
-
-  // INTRO LOGIC
   function startApp() {
-    playClick();
+    playSound(450, 0.1);
     const intro = document.getElementById('introScreen');
     intro.style.opacity = '0';
     setTimeout(() => {
@@ -158,7 +159,6 @@
     }, 800);
   }
 
-  // BANDERAS COUNTRYBALLS
   const skins = [
     { name: 'Portugal', flag: 'https://flagcdn.com/w320/pt.png' },
     { name: 'Brasil', flag: 'https://flagcdn.com/w320/br.png' },
@@ -178,21 +178,22 @@
     avatarPreview.style.backgroundImage = `url(${skins[skinIdx].flag})`;
   }
   function nextSkin() {
-    playClick();
+    playSound(450, 0.1);
     skinIdx = (skinIdx + 1) % skins.length;
     updateAvatar();
   }
   updateAvatar();
 
-  // MOTOR DE JUEGO
   let canvas, ctx;
   let inGame = false;
-  let player = { x: 0, y: 0, radius: 35, img: new Image(), angle: 0 };
+  let gameLevel = 1;
+  let player = { x: 0, y: 0, radius: 35, hp: 100, maxHp: 100, img: new Image(), angle: 0 };
   let mouse = { x: 0, y: 0 };
   let foodList = [];
   let botBalls = [];
   let bullets = [];
   let structures = [];
+  let particles = [];
 
   const loadedImages = {};
   skins.forEach(s => {
@@ -202,58 +203,31 @@
   });
 
   function enterGame() {
-    playClick();
+    playSound(450, 0.1);
     document.getElementById('lobbyScreen').style.display = 'none';
     document.getElementById('gameControls').style.display = 'flex';
+    document.getElementById('gameHUD').style.display = 'block';
+    
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
-    
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     player.img = loadedImages[skins[skinIdx].name];
-    player.x = 0;
-    player.y = 0;
-    mouse.x = canvas.width / 2;
-    mouse.y = canvas.height / 2;
+    player.x = 0; player.y = 0; player.hp = 100;
+    mouse.x = canvas.width / 2; mouse.y = canvas.height / 2;
+    gameLevel = 1;
 
-    // Generar comida
-    foodList = [];
-    for(let i = 0; i < 150; i++) {
-      foodList.push({
-        x: (Math.random() - 0.5) * 3000,
-        y: (Math.random() - 0.5) * 3000,
-        r: 5 + Math.random() * 5,
-        color: `hsl(${Math.random()*360}, 90%, 65%)`
-      });
-    }
+    // Generar comida para sanar
+    spawnFood();
+    // Estructuras pregeneradas
+    spawnInitialStructures();
+    // Generar Enemigos del Nivel 1
+    spawnBots();
 
-    // Generar Bots
-    botBalls = [];
-    for(let i = 0; i < 15; i++) {
-      let randomSkin = skins[Math.floor(Math.random() * skins.length)];
-      botBalls.push({
-        x: (Math.random() - 0.5) * 3000,
-        y: (Math.random() - 0.5) * 3000,
-        radius: 30 + Math.random() * 15,
-        img: loadedImages[randomSkin.name],
-        vx: (Math.random() - 0.5) * 3,
-        vy: (Math.random() - 0.5) * 3,
-        angle: 0
-      });
-    }
-
-    // Eventos de entrada
-    window.addEventListener('mousemove', e => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    });
-
+    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
     window.addEventListener('touchmove', e => {
-      if(e.touches.length > 0) {
-        mouse.x = e.touches[0].clientX;
-        mouse.y = e.touches[0].clientY;
-      }
+      if(e.touches.length > 0) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
     }, {passive: true});
 
     window.addEventListener('keydown', e => {
@@ -261,31 +235,97 @@
       if(e.code === 'KeyE') buildStructure();
     });
 
-    canvas.addEventListener('mousedown', e => {
-      if(e.button === 0 && inGame) shootBullet();
-    });
+    canvas.addEventListener('mousedown', e => { if(e.button === 0 && inGame) shootBullet(); });
 
     inGame = true;
     requestAnimationFrame(loop);
   }
 
-  // DISPARAR
+  function spawnFood() {
+    foodList = [];
+    for(let i = 0; i < 200; i++) {
+      foodList.push({
+        x: (Math.random() - 0.5) * 3500,
+        y: (Math.random() - 0.5) * 3500,
+        r: 6 + Math.random() * 4,
+        color: `hsl(${Math.random()*360}, 90%, 65%)`
+      });
+    }
+  }
+
+  function spawnInitialStructures() {
+    structures = [];
+    for(let i = 0; i < 30; i++) {
+      structures.push({
+        x: (Math.random() - 0.5) * 3000,
+        y: (Math.random() - 0.5) * 3000,
+        size: 50
+      });
+    }
+  }
+
+  function spawnBots() {
+    let count = 5 + gameLevel * 3;
+    botBalls = [];
+    for(let i = 0; i < count; i++) {
+      let randomSkin = skins[Math.floor(Math.random() * skins.length)];
+      botBalls.push({
+        x: (Math.random() - 0.5) * 3000,
+        y: (Math.random() - 0.5) * 3000,
+        radius: 30 + Math.random() * 10,
+        hp: 30 + gameLevel * 10,
+        img: loadedImages[randomSkin.name],
+        angle: 0,
+        lastShoot: Date.now() + Math.random() * 2000
+      });
+    }
+  }
+
+  function createExplosion(x, y, color) {
+    playSound(150, 0.3, 'sawtooth');
+    for(let i = 0; i < 20; i++) {
+      particles.push({
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 10,
+        vy: (Math.random() - 0.5) * 10,
+        r: Math.random() * 6 + 2,
+        color: color || '#ff5500',
+        life: 30
+      });
+    }
+  }
+
   function shootBullet() {
     if(!inGame) return;
-    playShootSound();
+    playSound(300, 0.1, 'square');
+    
+    // Auto-Aim hacia el bot más cercano
+    let targetAngle = player.angle;
+    let closestBot = null;
+    let minDist = 400;
+
+    botBalls.forEach(bot => {
+      let d = Math.hypot(bot.x - player.x, bot.y - player.y);
+      if(d < minDist) { minDist = d; closestBot = bot; }
+    });
+
+    if(closestBot) {
+      targetAngle = Math.atan2(closestBot.y - player.y, closestBot.x - player.x);
+    }
+
     bullets.push({
-      x: player.x + Math.cos(player.angle) * (player.radius + 10),
-      y: player.y + Math.sin(player.angle) * (player.radius + 10),
-      vx: Math.cos(player.angle) * 12,
-      vy: Math.sin(player.angle) * 12,
-      life: 80
+      x: player.x + Math.cos(targetAngle) * (player.radius + 10),
+      y: player.y + Math.sin(targetAngle) * (player.radius + 10),
+      vx: Math.cos(targetAngle) * 14,
+      vy: Math.sin(targetAngle) * 14,
+      isEnemy: false,
+      life: 70
     });
   }
 
-  // CONSTRUIR ESTRUCTURA/MURO
   function buildStructure() {
     if(!inGame) return;
-    playClick();
+    playSound(200, 0.1);
     structures.push({
       x: player.x + Math.cos(player.angle) * (player.radius + 40),
       y: player.y + Math.sin(player.angle) * (player.radius + 40),
@@ -293,46 +333,32 @@
     });
   }
 
-  // DIBUJAR COUNTRYBALLS CON OJOS
   function drawCountryball(x, y, radius, img, angle) {
     ctx.save();
     ctx.translate(x, y);
 
-    // Bandera
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.clip();
-    if(img.complete) {
-      ctx.drawImage(img, -radius, -radius, radius * 2, radius * 2);
-    } else {
-      ctx.fillStyle = '#333'; ctx.fill();
-    }
+    if(img.complete) { ctx.drawImage(img, -radius, -radius, radius * 2, radius * 2); }
     ctx.restore();
 
-    // Borde negro grueso
     ctx.save();
     ctx.translate(x, y);
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 4;
-    ctx.stroke();
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.stroke();
 
-    // Ojos blancos expresivos
     let eyeOffsetX = Math.cos(angle) * (radius * 0.3);
     let eyeOffsetY = Math.sin(angle) * (radius * 0.3);
 
-    // Izquierdo
     ctx.beginPath();
     ctx.ellipse(eyeOffsetX - radius*0.2, eyeOffsetY - radius*0.05, radius*0.22, radius*0.28, angle, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff'; ctx.fill();
-    ctx.strokeStyle = '#000000'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = 3; ctx.stroke();
 
-    // Derecho
     ctx.beginPath();
     ctx.ellipse(eyeOffsetX + radius*0.2, eyeOffsetY - radius*0.05, radius*0.22, radius*0.28, angle, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff'; ctx.fill();
-    ctx.strokeStyle = '#000000'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = 3; ctx.stroke();
 
     ctx.restore();
   }
@@ -340,44 +366,124 @@
   function loop() {
     if(!inGame) return;
 
-    // Movimiento jugador
+    // Movimiento Jugador
     let dx = mouse.x - canvas.width / 2;
     let dy = mouse.y - canvas.height / 2;
     player.angle = Math.atan2(dy, dx);
-    
     let dist = Math.hypot(dx, dy);
     if (dist > 10) {
       player.x += Math.cos(player.angle) * 4;
       player.y += Math.sin(player.angle) * 4;
     }
 
-    // Mover y actualizar proyectiles
-    for(let i = bullets.length - 1; i >= 0; i--) {
-      let b = bullets[i];
-      b.x += b.vx;
-      b.y += b.vy;
-      b.life--;
-      if(b.life <= 0) bullets.splice(i, 1);
+    // Curación al comer alimentos
+    for(let i = foodList.length - 1; i >= 0; i--) {
+      let f = foodList[i];
+      if(Math.hypot(f.x - player.x, f.y - player.y) < player.radius) {
+        player.hp = Math.min(player.maxHp, player.hp + 2);
+        foodList.splice(i, 1);
+      }
     }
 
-    // Mover bots
-    botBalls.forEach(bot => {
-      bot.x += bot.vx;
-      bot.y += bot.vy;
-      bot.angle = Math.atan2(bot.vy, bot.vx);
-      if(Math.abs(bot.x) > 1800) bot.vx *= -1;
-      if(Math.abs(bot.y) > 1800) bot.vy *= -1;
-    });
+    // Comportamiento de Bots (IA Enemiga)
+    let now = Date.now();
+    for(let bIdx = botBalls.length - 1; bIdx >= 0; bIdx--) {
+      let bot = botBalls[bIdx];
+      let bDist = Math.hypot(player.x - bot.x, player.y - bot.y);
+      bot.angle = Math.atan2(player.y - bot.y, player.x - bot.x);
+
+      // Persecución inteligente
+      if(bDist > 150) {
+        bot.x += Math.cos(bot.angle) * (2 + gameLevel * 0.3);
+        bot.y += Math.sin(bot.angle) * (2 + gameLevel * 0.3);
+      }
+
+      // Disparo de Enemigos
+      if(bDist < 500 && now - bot.lastShoot > Math.max(800, 2500 - gameLevel * 200)) {
+        bot.lastShoot = now;
+        bullets.push({
+          x: bot.x + Math.cos(bot.angle) * (bot.radius + 5),
+          y: bot.y + Math.sin(bot.angle) * (bot.radius + 5),
+          vx: Math.cos(bot.angle) * 8,
+          vy: Math.sin(bot.angle) * 8,
+          isEnemy: true,
+          life: 80
+        });
+      }
+    }
+
+    // Actualización de Proyectiles y Colisiones
+    for(let i = bullets.length - 1; i >= 0; i--) {
+      let b = bullets[i];
+      b.x += b.vx; b.y += b.vy; b.life--;
+
+      // Choque con Muros
+      let hitWall = false;
+      structures.forEach(st => {
+        if(Math.abs(b.x - st.x) < st.size/2 && Math.abs(b.y - st.y) < st.size/2) hitWall = true;
+      });
+
+      if(hitWall || b.life <= 0) {
+        bullets.splice(i, 1);
+        continue;
+      }
+
+      // Proyectiles vs Jugador
+      if(b.isEnemy && Math.hypot(b.x - player.x, b.y - player.y) < player.radius) {
+        player.hp -= 10;
+        createExplosion(player.x, player.y, '#ef4444');
+        bullets.splice(i, 1);
+        if(player.hp <= 0) {
+          alert('¡Fuiste eliminado! Reiniciando...');
+          location.reload();
+        }
+        continue;
+      }
+
+      // Proyectiles Jugador vs Bots
+      if(!b.isEnemy) {
+        for(let bIdx = botBalls.length - 1; bIdx >= 0; bIdx--) {
+          let bot = botBalls[bIdx];
+          if(Math.hypot(b.x - bot.x, b.y - bot.y) < bot.radius) {
+            bot.hp -= 20;
+            createExplosion(bot.x, bot.y, '#ffcc00');
+            bullets.splice(i, 1);
+            
+            if(bot.hp <= 0) {
+              createExplosion(bot.x, bot.y, '#ff0055');
+              botBalls.splice(bIdx, 1);
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    // Subir de Nivel si destruye a todos los enemigos
+    if(botBalls.length === 0) {
+      gameLevel++;
+      document.getElementById('levelDisplay').innerText = `Nivel: ${gameLevel}`;
+      spawnFood();
+      spawnBots();
+    }
+
+    // Actualizar Partículas
+    for(let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.life--;
+      if(p.life <= 0) particles.splice(i, 1);
+    }
+
+    // Actualizar Barra de Vida
+    document.getElementById('healthFill').style.width = `${Math.max(0, (player.hp / player.maxHp)*100)}%`;
 
     // RENDERIZADO
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Fondo Malla
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2;
+    // Malla
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
     let gridOffsetX = (-player.x + canvas.width/2) % 60;
     let gridOffsetY = (-player.y + canvas.height/2) % 60;
-    
     for (let x = gridOffsetX; x < canvas.width; x += 60) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
     }
@@ -387,43 +493,42 @@
 
     // Render Comida
     foodList.forEach(f => {
-      let screenX = f.x - player.x + canvas.width/2;
-      let screenY = f.y - player.y + canvas.height/2;
-      ctx.beginPath();
-      ctx.arc(screenX, screenY, f.r, 0, Math.PI*2);
-      ctx.fillStyle = f.color;
-      ctx.fill();
+      let sx = f.x - player.x + canvas.width/2;
+      let sy = f.y - player.y + canvas.height/2;
+      ctx.beginPath(); ctx.arc(sx, sy, f.r, 0, Math.PI*2);
+      ctx.fillStyle = f.color; ctx.fill();
     });
 
-    // Render Estructuras / Muros
+    // Render Estructuras
     structures.forEach(st => {
-      let screenX = st.x - player.x + canvas.width/2;
-      let screenY = st.y - player.y + canvas.height/2;
-      ctx.fillStyle = '#64748b';
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineWidth = 4;
-      ctx.fillRect(screenX - st.size/2, screenY - st.size/2, st.size, st.size);
-      ctx.strokeRect(screenX - st.size/2, screenY - st.size/2, st.size, st.size);
+      let sx = st.x - player.x + canvas.width/2;
+      let sy = st.y - player.y + canvas.height/2;
+      ctx.fillStyle = '#475569'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 4;
+      ctx.fillRect(sx - st.size/2, sy - st.size/2, st.size, st.size);
+      ctx.strokeRect(sx - st.size/2, sy - st.size/2, st.size, st.size);
     });
 
-    // Render Proyectiles
+    // Render Balas
     bullets.forEach(b => {
-      let screenX = b.x - player.x + canvas.width/2;
-      let screenY = b.y - player.y + canvas.height/2;
-      ctx.beginPath();
-      ctx.arc(screenX, screenY, 6, 0, Math.PI*2);
-      ctx.fillStyle = '#f59e0b';
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      let sx = b.x - player.x + canvas.width/2;
+      let sy = b.y - player.y + canvas.height/2;
+      ctx.beginPath(); ctx.arc(sx, sy, 6, 0, Math.PI*2);
+      ctx.fillStyle = b.isEnemy ? '#ef4444' : '#f59e0b'; ctx.fill();
+    });
+
+    // Render Partículas de Explosión
+    particles.forEach(p => {
+      let sx = p.x - player.x + canvas.width/2;
+      let sy = p.y - player.y + canvas.height/2;
+      ctx.beginPath(); ctx.arc(sx, sy, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.color; ctx.fill();
     });
 
     // Render Bots
     botBalls.forEach(bot => {
-      let screenX = bot.x - player.x + canvas.width/2;
-      let screenY = bot.y - player.y + canvas.height/2;
-      drawCountryball(screenX, screenY, bot.radius, bot.img, bot.angle);
+      let sx = bot.x - player.x + canvas.width/2;
+      let sy = bot.y - player.y + canvas.height/2;
+      drawCountryball(sx, sy, bot.radius, bot.img, bot.angle);
     });
 
     // Render Jugador
@@ -433,4 +538,5 @@
   }
 </script>
 </body>
-</html>
+ </html>
+ 
