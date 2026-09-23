@@ -6,21 +6,40 @@
 <title>COUNTRYBALLS WAR ONLINE - VM</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b132b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
 
-  /* PANTALLA DE INICIO VM STUDIOS */
+  /* ANIMACIÓN INTRO ESTILO GARENA */
   #introScreen {
-    position: absolute; inset: 0; z-index: 9999; background: #000;
+    position: fixed; inset: 0; z-index: 9999; background: #000;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: #fff; cursor: pointer; transition: opacity 0.5s ease;
+    cursor: pointer; opacity: 1; transition: opacity 0.8s ease-in-out;
   }
-  .intro-logo { font-size: 4rem; font-weight: 900; background: linear-gradient(135deg, #ff0055, #ffcc00, #00ffcc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 20px rgba(255,0,85,0.4); }
-  .intro-sub { font-size: 1.2rem; color: #888; letter-spacing: 6px; margin-top: 5px; }
-  .intro-hint { margin-top: 40px; font-size: 0.9rem; color: #aaa; animation: blink 1.5s infinite; }
 
-  @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+  .intro-content {
+    display: flex; flex-direction: column; align-items: center;
+    animation: garenaIntro 2.5s ease-out forwards;
+  }
 
-  /* LOBBY SLITHER */
+  .intro-logo {
+    font-size: 4.5rem; font-weight: 900;
+    background: linear-gradient(135deg, #ff0055, #ffcc00, #00ffcc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 25px rgba(255, 0, 85, 0.5);
+    letter-spacing: 2px;
+  }
+
+  .intro-sub {
+    font-size: 1.3rem; color: #aaa; letter-spacing: 8px; margin-top: -5px; font-weight: bold;
+  }
+
+  @keyframes garenaIntro {
+    0% { opacity: 0; transform: scale(0.7); }
+    40% { opacity: 1; transform: scale(1.05); }
+    70% { transform: scale(1); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* LOBBY */
   #lobbyScreen {
     position: absolute; inset: 0; z-index: 100;
     background: radial-gradient(circle, #1d3557 0%, #0b132b 100%);
@@ -80,11 +99,9 @@
     font-size: 0.8rem; color: #fff; font-weight: 900;
   }
 
-  .ammo-display {
-    margin-top: 6px; font-size: 1rem; color: #f59e0b; font-weight: 900;
-  }
+  .ammo-display { margin-top: 6px; font-size: 1rem; color: #f59e0b; font-weight: 900; }
 
-  /* JOYSTICK IZQUIERDA */
+  /* CONTROLES */
   #joystickZone {
     position: absolute; bottom: 25px; left: 25px; z-index: 50; display: none;
     width: 120px; height: 120px; background: rgba(255,255,255,0.15);
@@ -96,7 +113,6 @@
     border-radius: 50%; border: 2px solid #fff; pointer-events: none;
   }
 
-  /* BOTONES DERECHA */
   #gameControls {
     position: absolute; bottom: 25px; right: 20px; z-index: 50;
     display: none; gap: 12px; flex-direction: row; touch-action: none;
@@ -118,14 +134,15 @@
 </head>
 <body>
 
-  <!-- INTRO VM STUDIOS -->
+  <!-- INTRO STYLE GARENA -->
   <div id="introScreen">
-    <div class="intro-logo">VM</div>
-    <div class="intro-sub">STUDIOS</div>
-    <div class="intro-hint">Toca la pantalla para continuar</div>
+    <div class="intro-content">
+      <div class="intro-logo">VM</div>
+      <div class="intro-sub">STUDIOS</div>
+    </div>
   </div>
 
-  <!-- LOBBY SLITHER -->
+  <!-- LOBBY -->
   <div id="lobbyScreen" style="display: none;">
     <div class="slither-title">Countryballs War</div>
     
@@ -139,7 +156,7 @@
     <button class="btn-skin" id="btnChangeSkin">Cambiar Ball</button>
   </div>
 
-  <!-- HUD PRINCIPAL -->
+  <!-- HUD -->
   <div id="gameHUD">
     <div id="levelDisplay">Nivel: 1</div>
     <div class="health-bar">
@@ -149,12 +166,12 @@
     <div id="ammoDisplay" class="ammo-display">Munición: 30 / 30</div>
   </div>
 
-  <!-- JOYSTICK IZQUIERDO -->
+  <!-- JOYSTICK -->
   <div id="joystickZone">
     <div id="joystickKnob"></div>
   </div>
 
-  <!-- ACCIONES DERECHA -->
+  <!-- BOTONES -->
   <div id="gameControls">
     <div class="control-btn btn-heal" id="btnHeal">CURAR</div>
     <div class="control-btn btn-build" id="btnBuild">MURO</div>
@@ -164,7 +181,6 @@
   <canvas id="gameCanvas"></canvas>
 
 <script>
-  // AUDIO ENGINE
   let audioCtx = null;
   function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -185,13 +201,13 @@
     } catch(e){}
   }
 
-  // INTRO LOGIC
+  // TRANSICIÓN AUTOMÁTICA DE LA INTRO AL LOBBY
   const introScreen = document.getElementById('introScreen');
-  let introDone = false;
+  let introEnded = false;
 
-  function hideIntro() {
-    if (introDone) return;
-    introDone = true;
+  function goToLobby() {
+    if(introEnded) return;
+    introEnded = true;
     initAudio();
     playSound(450, 0.1);
     
@@ -199,13 +215,15 @@
     setTimeout(() => {
       introScreen.style.display = 'none';
       document.getElementById('lobbyScreen').style.display = 'flex';
-    }, 500);
+    }, 800);
   }
 
-  introScreen.addEventListener('click', hideIntro);
-  introScreen.addEventListener('touchstart', (e) => { e.preventDefault(); hideIntro(); }, {passive: false});
+  // Transición automática tras 2.8 segundos (o al pulsar la pantalla)
+  setTimeout(goToLobby, 2800);
+  introScreen.addEventListener('click', goToLobby);
+  introScreen.addEventListener('touchstart', goToLobby, {passive: true});
 
-  // SKINS
+  // BANDERAS
   const skins = [
     { name: 'Portugal', flag: 'https://flagcdn.com/w320/pt.png' },
     { name: 'Brasil', flag: 'https://flagcdn.com/w320/br.png' },
@@ -296,7 +314,6 @@
     const jKnob = document.getElementById('joystickKnob');
     const btnShoot = document.getElementById('btnShoot');
 
-    // DISPARO MULTITOUCH
     btnShoot.addEventListener('touchstart', (e) => {
       e.preventDefault();
       for(let t of e.changedTouches) {
@@ -324,7 +341,6 @@
     document.getElementById('btnBuild').addEventListener('touchstart', (e) => { e.preventDefault(); buildStructure(); }, {passive: false});
     document.getElementById('btnBuild').addEventListener('click', buildStructure);
 
-    // JOYSTICK MULTITOUCH
     jZone.addEventListener('touchstart', e => {
       e.preventDefault();
       let t = e.changedTouches[0];
@@ -528,7 +544,6 @@
     ctx.ellipse(eyeOffsetX + radius*0.2, eyeOffsetY - radius*0.05, radius*0.22, radius*0.28, angle, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; ctx.stroke();
 
-    // BARRA DE VIDA SOBRE CADA ENEMIGO
     if(hp !== undefined && maxHp !== undefined) {
       let barW = radius * 1.6;
       let barH = 5;
@@ -603,11 +618,4 @@
         createExplosion(player.x, player.y, '#ef4444');
         bullets.splice(i, 1);
         if(player.hp <= 0) {
-          alert('¡Has sido eliminado!');
-          location.reload();
-        }
-        continue;
-      }
-
-      if(!b.isEnemy) {
-        for(let bI
+        
