@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>COUNTRYBALLS WAR ONLINE - VM</title>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<style>
+  :root {
+    --primary: #4e73df;
+    --accent: #7cff4a;
+    --panel: rgba(15, 23, 42, 0.85);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: none; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background: #000; overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif; color: #fff;
+  }
+
+  /* PANTALLA INTRO ESTILO GARENA */
+  #introScreen {
+    position: absolute; inset: 0; z-index: 1000;
+    background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 1; transition: opacity 0.8s ease-out;
+  }
+  .intro-content {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    animation: introAnimation 3.2s ease-in-out forwards;
+  }
+  #introLogoCanvas { width: 130px; height: 130px; margin-bottom: 12px; }
+  .intro-title {
+    font-size: 32px; font-weight: 900; color: #e11d48; letter-spacing: 4px;
+    text-shadow: 0 0 15px rgba(225, 29, 72, 0.6);
+  }
+
+  @keyframes introAnimation {
+    0% { opacity: 0; transform: scale(0.8); }
+    30% { opacity: 1; transform: scale(1); }
+    75% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.05); }
+  }
+
+  /* LOBBY PRINCIPAL */
+  .screen {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px; text-align: center;
+    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+  }
+  .screen.active { display: flex; }
+
+  .lobby-title {
+    font-size: clamp(28px, 8vw, 44px); font-weight: 900; letter-spacing: 2px;
+    color: #f8fafc; text-shadow: 0 0 20px rgba(78, 115, 223, 0.8), 0 4px 10px #000;
+    margin-bottom: 2px;
+  }
+  .lobby-sub { color: #94a3b8; font-size: 13px; margin-bottom: 10px; font-weight: 600; }
+
+  .preview-container {
+    width: 120px; height: 120px; margin: 5px 0;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  #lobbyBallCanvas {
+    width: 110px; height: 110px;
+    animation: floatAnim 2.5s ease-in-out infinite;
+  }
+  @keyframes floatAnim {
+    0%, 100% { transform: translateY(0px) rotate(-3deg); }
+    50% { transform: translateY(-10px) rotate(3deg); }
+  }
+
+  .nick-input {
+    width: min(280px, 80vw); padding: 12px 18px; border-radius: 25px;
+    border: 2px solid #334155; background: rgba(30, 41, 59, 0.9);
+    color: #fff; font-size: 15px; font-weight: bold; text-align: center;
+    margin-bottom: 12px; outline: none; transition: 0.3s;
+  }
+  .nick-input:focus { border-color: var(--primary); box-shadow: 0 0 12px rgba(78, 115, 223, 0.5); }
+
+  .slither-btn {
+    width: min(280px, 80vw); padding: 12px; margin: 5px 0;
+    border-radius: 30px; border: none;
+    font-size: 15px; font-weight: 800; letter-spacing: 1px; color: #fff;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.1s;
+  }
+  .slither-btn:active { transform: scale(0.96); }
+  .btn-online { background: linear-gradient(135deg, #22c55e, #15803d); }
+  .btn-bots { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  .btn-skin { background: linear-gradient(135deg, #a855f7, #6b21a8); }
+
+  /* SELECCIÓN DE PAÍSES */
+  .country-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    max-width: 320px; margin: 15px 0; max-height: 220px; overflow-y: auto; padding: 5px;
+  }
+  .country-card {
+    background: rgba(255,255,255,0.05); border: 2px solid transparent;
+    border-radius: 12px; padding: 8px; cursor: pointer; text-align: center;
+    font-size: 11px; font-weight: bold;
+  }
+  .country-card.selected { border-color: var(--accent); background: rgba(124, 255, 74, 0.15); }
+  .country-card canvas { width: 45px; height: 45px; display: block; margin: 0 auto 4px auto; }
+
+  /* JUEGO Y HUD */
+  #game { position: absolute; inset: 0; display: block; background: #0f172a; }
+  #hud { position: absolute; inset: 0; pointer-events: none; }
+  #hud > * { pointer-events: auto; }
+
+  #statusBar {
+    position: absolute; top: 12px; left: 60px; right: 12px;
+    display: flex; justify-content: space-between; pointer-events: none; gap: 8px;
+  }
+  .statBlock {
+    background: var(--panel); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 6px 12px; backdrop-filter: blur(4px);
+  }
+  .hpOuter { width: 100px; height: 8px; background: #000; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .hpInner { height: 100%; width: 100%; background: linear-gradient(90deg, #ef4444, #22c55e); transition: width 0.2s; }
+  .xpOuter { width: 100px; height: 6px; background: #000; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .xpInner { height: 100%; width: 0%; background: #3b82f6; transition: width 0.2s; }
+
+  #gearBtn {
+    position: absolute; top: 12px; left: 12px; width: 40px; height: 40px;
+    border-radius: 50%; background: var(--panel); border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; z-index: 10;
+  }
+
+  #hudEditorModal {
+    position: absolute; inset: 0; background: rgba(15, 23, 42, 0.95);
+    display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+  }
+  #hudEditorModal.active { display: flex; }
+
+  #joystickZone {
+    position: absolute; width: 130px; height: 130px; left: 24px; bottom: 24px;
+    border-radius: 50%; background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.2);
+  }
+  #joystickKnob {
+    position: absolute; width: 55px; height: 55px; left: 50%; top: 50%;
+    transform: translate(-50%,-50%); border-radius: 50%; background: rgba(78, 115, 223, 0.6);
+    border: 2px solid #fff;
+  }
+
+  .actionBtn {
+    position: absolute; border-radius: 50%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-size: 10px; font-weight: bold;
+    background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); color: #fff;
+    overflow: hidden;
+  }
+  .cooldownOverlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); height: 0%; bottom: 0; }
+  #btnShoot { width: 85px; height: 85px; right: 20px; bottom: 30px; background: rgba(239, 68, 68, 0.3); border-color: rgba(239, 68, 68, 0.6); }
+  #btnReload { width: 55px; height: 55px; right: 120px; bottom: 105px; background: rgba(59, 130, 246, 0.3); }
+  #btnHeal { width: 55px; height: 55px; right: 20px; bottom: 130px; background: rgba(34, 197, 94, 0.3); }
+
+  #rotateOverlay {
+    position: fixed; inset: 0; background: #0f172a; z-index: 999;
+    display: none; align-items: center; justify-content: center; flex-direction: column; text-align: center;
+  }
+  @media (orientation: portrait) { #rotateOverlay { display: flex; } }
+</style>
+</head>
+<body>
+
+<!-- INTRO TIPO GARENA CON VM -->
+<div id="introScreen">
+  <div class="intro-content">
+    <canvas id="introLogoCanvas" width="130" height="130"></canvas>
+    <div class="intro-title">VM</div>
+  </div>
+</div>
+
+<!-- LOBBY PRINCIPAL -->
+<div id="screenMenu" class="screen active">
+  <div class="lobby-title">COUNTRYBALLS</div>
+  <div class="lobby-sub">ZONA DE FUEGO</div>
+
+  <div class="preview-container">
+    <canvas id="lobbyBallCanvas" width="110" height="110"></canvas>
+  </div>
+
+  <input type="text" id="playerNick" class="nick-input" placeholder="Tu Apodo..." maxlength="12" value="Jugador">
+
+  <button class="slither-btn btn-online" id="btnPlayOnline">🌐 JUGAR ONLINE</button>
+  <button class="slither-btn btn-bots" id="btnPlayBots">🤖 JUGAR VS BOTS</button>
+  <button class="slither-btn btn-skin" id="btnSkin">🌍 ELEGIR PAÍS</button>
+</div>
+
+<!-- SELECCIÓN DE PAÍS -->
+<div id="screenSkin" class="screen">
+  <div class="lobby-title" style="font-size:24px;">ELEGÍ TU PAÍS</div>
+  <div class="country-grid" id="countryGrid"></div>
+  <button class="slither-btn btn-online" id="btnSaveSkin">GUARDAR Y VOLVER</button>
+</div>
+
+<!-- LOBBY ONLINE -->
+<div id="screenLobby" class="screen">
+  <div class="lobby-title" style="font-size:24px;">SALA ONLINE</div>
+  <div style="margin:15px 0;">
+    <p style="font-size:12px;color:#cbd5e1;margin:0;">Tu código de sala:</p>
+    <div id="roomCodeBox" style="font-size:32px; font-weight:bold; color:var(--accent); letter-spacing:4px;">----</div>
+  </div>
+  <input type="text" id="joinInput" class="nick-input" placeholder="CÓDIGO DE RIVAL" style="text-transform:uppercase;">
+  <button class="slither-btn btn-bots" id="btnJoinConfirm">UNIRSE A SALA</button>
+  <div id="lobbyStatus" style="font-size:12px; margin-top:10px; color:#aaa;">Esperando jugador...</div>
+  <button class="slither-btn btn-skin" id="btnBackMenu" style="margin-top:15px;">VOLVER</button>
+</div>
+
+<!-- PANTALLA JUEGO -->
+<div id="screenGame" class="screen" style="padding:0;">
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div id="gearBtn">⚙️</div>
+    <div id="statusBar">
+      <div class="statBlock">
+        <div style="font-size:10px; font-weight:bold;" id="levelLabel">NIVEL 1</div>
+        <div class="hpOuter"><div class="hpInner" id="hpBar"></div></div>
+        <div class="xpOuter"><div class="xpInner" id="xpBar"></div></div>
+      </div>
+      <div class="statBlock" style="text-align:right;">
+        <div style="font-size:10px; font-weight:bold;">BAJAS</div>
+        <b id="killsCount" style="color:var(--accent); font-size:14px;">0</b>
+      </div>
+    </div>
+
+    <div id="joystickZone"><div id="joystickKnob"></div></div>
+    
+    <div id="btnShoot" class="actionBtn">
+      <div class="cooldownOverlay" id="cdShoot"></div>
+      <span style="font-size:20px;z-index:2;">🔫</span>
+      <span id="ammoLabel" style="z-index:2;">30/30</span>
+    </div>
+    
+    <div id="btnReload" class="actionBtn">
+      <div class="cooldownOverlay" id="cdReload"></div>
+      <span style="font-size:16px;z-index:2;">🔄</span>
+      <span style="z-index:2;">RECARGA</span>
+    </div>
+    
+    <div id="btnHeal" class="actionBtn">
+      <div class="cooldownOverlay" id="cdHeal"></div>
+      <span style="font-size:16px;z-index:2;">➕</span>
+      <span id="healLabel" style="z-index:2;">x3</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAUSA -->
+<div id="hudEditorModal">
+  <h2 style="color:var(--accent);margin-bottom:10px;">PAUSA</h2>
+  <p style="font-size:12px;color:#aaa;max-width:280px;margin-bottom:20px;">Tu país queda fijado durante la partida. Para cambiarlo salí al menú principal.</p>
+  <button class="slither-btn btn-online" id="btnSaveHud">CONTINUAR JUGANDO</button>
+  <button class="slither-btn btn-bots" id="btnExitGame" style="margin-top:10px;background:linear-gradient(135deg,#ef4444,#991b1b);">SALIR AL MENÚ</button>
+</div>
+
+<div id="rotateOverlay">
+  <div style="font-size:48px; margin-bottom:10px;">📱↻</div>
+  <p style="color:var(--accent); font-weight:bold;">Girá tu celular horizontalmente para jugar</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* MOTOR DE SONIDOS SINTETIZADOS (SINTETIZADOR WEB AUDIO API) */
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playShootSound() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  // Frecuencia rápida descendente para simular disparo 🔫
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(300, now);
+  osc.frequency.exponentialRampToValueAtTime(10, now + 0.12);
+  
+  gain.gain.setValueAtTime(0.3, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.12);
+}
+
+function playReloadSound() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(400, now);
+  osc.frequency.linearRampToValueAtTime(800, now + 0.1);
+  
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.1);
+}
+
+function playHealSound() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(300, now);
+  osc.frequency.exponentialRampToValueAtTime(600, now + 0.25);
+  
+  gain.gain.setValueAtTime(0.2, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.25);
+}
+
+function playHitSound() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(150, now);
+  osc.frequency.linearRampToValueAtTime(40, now + 0.08);
+  
+  gain.gain.setValueAtTime(0.2, now);
+  gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.08);
+}
+
+/* COUNTRYBALLS (INCLUIDO PORTUGAL) */
+const COUNTRIES = [
+  { id:'por', name:'Portugal', draw: drawPortugal },
+  { id:'arg', name:'Argentina', draw: drawArgentina },
+  { id:'mex', name:'México', draw: drawMexico },
+  { id:'bra', name:'Brasil', draw: drawBrazil },
+  { id:'usa', name:'EE.UU.', draw: drawUSA },
+  { id:'esp', name:'España', draw: drawSpain },
+  { id:'col', name:'Colombia', draw: drawColombia },
+  { id:'chl', name:'Chile', draw: drawChile }
+];
+
+let selectedCountry = 'por';
+let activeMatchCountry = 'por';
+
+function drawBaseBall(ctx, r) {
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
+}
+
+function drawEyes(ctx, r, angle=0) {
+  ctx.save();
+  ctx.rotate(angle);
+  ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#000000'; ctx.lineWidth = 2;
+
+  ctx.beginPath(); ctx.ellipse(-r*0.3, -r*0.1, r*0.22, r*0.32, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(r*0.1, -r*0.1, r*0.22, r*0.32, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+function drawPortugal(ctx, r) {
+  ctx.save(); drawBaseBall(ctx, r);
+  ctx.fillStyle = '#006600'; ctx.fillRect(-r,-r,r*0.8,r*2);
+  ctx.fillStyle = '#ff0000'; ctx.fillRect(-r*0.2,-r,r*1.2,r*2);
+  ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.arc(-r*0.2,0,r*0.35,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#003399'; ctx.fillRect(-r*0.3,-r*0.15,r*0.2,r*0.3);
+  ctx.restore();
+}
+
+function drawArgentina(ctx, r) {
+  ctx.save(); drawBaseBall(ctx, r);
+  ctx.fillStyle = '#74acdf'; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(-r,-r*0.33,r*2,r*0.66);
+  ctx.fillStyle = '#f8b133'; ctx.beginPath(); ctx.arc(0,0,r*0.2,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawMexico(ctx, r) {
+  ctx.save(); drawBaseBall(ctx, r);
+  ctx.fillStyle = '#006847'; ctx.fillRect(-r,-r,r*0.66,r*2);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(-r*0.33,-r,r*0.66,r*2);
+  ctx.fillStyle = '#ce1126'; ctx.fillRect(r*0.33,-r,r*0.66,r*2);
+  ctx.restore();
+}
+
+function drawBrazil(ctx, r) {
+  ctx.save(); drawBaseBall(ctx, r);
+  ctx.fillStyle = '#009c3b'; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.fillStyle = '#ffdf00'; ctx.beginPath();
+  ctx.moveTo(0,-r*0.7); ctx.lineTo(r*0.8,0); ctx.lineTo(0,r*0.7); ctx.lineTo(-r*0.8,0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#002776'; ctx.beginPath(); ctx.arc(0,0,r*0.35,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawUSA(ctx, r) {
+  ctx.save(); drawBaseBall(ctx, r);
+  ctx.fillStyle = '#b22234'; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.fillStyle = '#ffffff';
+  for(let i=-r; i<r; i+=r*0.3) { ctx.fillRect(-r,i,r*2,r*0.15); }
+  ctx.fillStyle = '#3c3b6e'; ctx.fillRect(-r,-r,r,r);
+  ctx.restore();
+}
+
+function drawSpain(ctx, r) {
+  ctx.save(); drawBaseBall(ctx, r);
+  ctx.fillStyle = '#aa151b'; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.fillStyle = '#f1bf00'; ctx.fillRect(-r,-r*0.4,r*2,r*0.8);
+  ctx.restore();
+}
+
+function drawColombia(ctx, r) {
+  ctx.save(); drawBaseBall(ctx, r);
+  ctx.fillStyle = '#fcd116'; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.fillStyle = '#003893'; ctx.fillRect(-r,0,r*2,r*0.5);
+  ctx.fillStyle = '#ce1126'; ctx.fillRect(-r,r*0.5,r*2,r*0.5);
+  ctx.restore();
+}
+
+function drawChile(ctx, r) {
+  ctx.save(); drawBaseBall(ctx, r);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(-r,-r,r*2,r);
+  ctx.fillStyle = '#d52b1e'; ctx.fillRect(-r,0,r*2,r);
+  ctx.fillStyle = '#0039a6'; ctx.fillRect(-r,-r,r,r);
+  ctx.restore();
+}
+
+function renderCountryBall(ctx, x, y, r, countryId, facing={x:1,y:0}) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(0, r*0.85, r*0.9, r*0.3, 0, 0, Math.PI*2); ctx.fill();
+
+  ctx.beginPath(); ctx.arc(0, 0, r+2, 0, Math.PI*2);
+  ctx.fillStyle = '#000'; ctx.fill();
+
+  const country = COUNTRIES.find(c => c.id === countryId) || COUNTRIES[0];
+  country.draw(ctx, r);
+
+  const angle = Math.atan2(facing.y, facing.x);
+  drawEyes(ctx, r, angle);
+
+  ctx.save();
+  ctx.rotate(angle);
+  ctx.fillStyle = '#334155'; ctx.fillRect(r*0.3, r*0.1, r*0.8, r*0.3);
+  ctx.fillStyle = '#0f172a'; ctx.fillRect(r*0.7, r*0.05, r*0.5, r*0.15);
+  ctx.restore();
+
+  ctx.restore();
+}
+
+/* INTRO LOGO DIBUJO */
+const introCanvas = document.getElementById('introLogoCanvas');
+const introCtx = introCanvas.getContext('2d');
+renderCountryBall(introCtx, 65, 65, 45, 'por', {x: 1, y: 0});
+
+setTimeout(() => {
+  const intro = document.getElementById('introScreen');
+  intro.style.opacity = '0';
+  setTimeout(() => { intro.style.display = 'none'; }, 800);
+}, 3000);
+
+/* ANIMACIÓN LOBBY */
+const lobbyCanvas = document.getElementById('lobbyBallCanvas');
+const lobbyCtx = lobbyCanvas.getContext('2d');
+let lobbyAngle = 0;
+
+function animateLobby() {
+  lobbyCtx.clearRect(0, 0, 110, 110);
+  lobbyAngle += 0.015;
+  renderCountryBall(lobbyCtx, 55, 55, 36, selectedCountry, {x: Math.cos(lobbyAngle), y: Math.sin(lobbyAngle)});
+  requestAnimationFrame(animateLobby);
+}
+animateLobby();
+
+/* GRID SELECCIÓN PAÍSES */
+const countryGrid = document.getElementById('countryGrid');
+COUNTRIES.forEach(c => {
+  const card = document.createElement('div');
+  card.className = 'country-card' + (c.id === selectedCountry ? ' selected' : '');
+  const cvs = document.createElement('canvas');
+  cvs.width = 45; cvs.height = 45;
+  renderCountryBall(cvs.getContext('2d'), 22.5, 22.5, 18, c.id, {x:1, y:0});
+
+  card.appendChild(cvs);
+  const label = document.createElement('span');
+  label.textContent = c.name;
+  card.appendChild(label);
+
+  card.onclick = () => {
+    initAudio();
+    document.querySelectorAll('.country-card').forEach(el=>el.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedCountry = c.id;
+  };
+  countryGrid.appendChild(card);
+});
+
+/* PANTALLAS Y NAVEGACIÓN */
+const screens = {
+  menu: document.getElementById('screenMenu'),
+  skin: document.getElementById('screenSkin'),
+  lobby: document.getElementById('screenLobby'),
+  game: document.getElementById('screenGame')
+};
+
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+function startGame() {
+  initAudio();
+  activeMatchCountry = selectedCountry;
+  resetGame();
+  showScreen('game');
+  resize();
+}
+
+document.getElementById('btnSkin').onclick = () => { initAudio(); showScreen('skin'); };
+document.getElementById('btnSaveSkin').onclick = () => showScreen('menu');
+document.getElementById('btnPlayOnline').onclick = () => { initAudio(); ga
