@@ -8,7 +8,19 @@
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #0b132b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
 
-  /* LOBBY DIRECTO (SIN INTRO TRABADA) */
+  /* PANTALLA DE INICIO VM STUDIOS */
+  #introScreen {
+    position: absolute; inset: 0; z-index: 9999; background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; cursor: pointer; transition: opacity 0.5s ease;
+  }
+  .intro-logo { font-size: 4rem; font-weight: 900; background: linear-gradient(135deg, #ff0055, #ffcc00, #00ffcc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 20px rgba(255,0,85,0.4); }
+  .intro-sub { font-size: 1.2rem; color: #888; letter-spacing: 6px; margin-top: 5px; }
+  .intro-hint { margin-top: 40px; font-size: 0.9rem; color: #aaa; animation: blink 1.5s infinite; }
+
+  @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+  /* LOBBY SLITHER */
   #lobbyScreen {
     position: absolute; inset: 0; z-index: 100;
     background: radial-gradient(circle, #1d3557 0%, #0b132b 100%);
@@ -56,35 +68,43 @@
   /* HUD */
   #gameHUD {
     position: absolute; top: 15px; left: 15px; z-index: 50; display: none;
-    color: #fff; font-weight: bold; font-size: 1.1rem;
+    color: #fff; font-weight: bold; font-size: 1.1rem; text-shadow: 0 2px 4px #000;
   }
   .health-bar {
-    width: 180px; height: 20px; background: rgba(0,0,0,0.6);
-    border: 2px solid #fff; border-radius: 10px; overflow: hidden; margin-top: 5px;
+    width: 200px; height: 22px; background: rgba(0,0,0,0.6);
+    border: 2px solid #fff; border-radius: 11px; overflow: hidden; margin-top: 5px; position: relative;
   }
   .health-fill { width: 100%; height: 100%; background: #22c55e; transition: width 0.1s; }
+  .health-text {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; color: #fff; font-weight: 900;
+  }
 
-  /* JOYSTICK TÁCTIL IZQUIERDA */
+  .ammo-display {
+    margin-top: 6px; font-size: 1rem; color: #f59e0b; font-weight: 900;
+  }
+
+  /* JOYSTICK IZQUIERDA */
   #joystickZone {
     position: absolute; bottom: 25px; left: 25px; z-index: 50; display: none;
-    width: 110px; height: 110px; background: rgba(255,255,255,0.15);
+    width: 120px; height: 120px; background: rgba(255,255,255,0.15);
     border: 2px dashed rgba(255,255,255,0.5); border-radius: 50%;
     align-items: center; justify-content: center; touch-action: none;
   }
   #joystickKnob {
-    width: 45px; height: 45px; background: rgba(255,255,255,0.8);
+    width: 50px; height: 50px; background: rgba(255,255,255,0.8);
     border-radius: 50%; border: 2px solid #fff; pointer-events: none;
   }
 
-  /* BOTONES TÁCTILES DERECHA */
+  /* BOTONES DERECHA */
   #gameControls {
     position: absolute; bottom: 25px; right: 20px; z-index: 50;
-    display: none; gap: 10px; flex-direction: row; touch-action: none;
+    display: none; gap: 12px; flex-direction: row; touch-action: none;
   }
 
   .control-btn {
-    width: 60px; height: 60px; border-radius: 50%; border: 3px solid #fff;
-    background: rgba(0,0,0,0.5); color: #fff; font-weight: 900; font-size: 0.75rem;
+    width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff;
+    background: rgba(0,0,0,0.5); color: #fff; font-weight: 900; font-size: 0.8rem;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; touch-action: none;
   }
@@ -98,7 +118,15 @@
 </head>
 <body>
 
-  <div id="lobbyScreen">
+  <!-- INTRO VM STUDIOS -->
+  <div id="introScreen">
+    <div class="intro-logo">VM</div>
+    <div class="intro-sub">STUDIOS</div>
+    <div class="intro-hint">Toca la pantalla para continuar</div>
+  </div>
+
+  <!-- LOBBY SLITHER -->
+  <div id="lobbyScreen" style="display: none;">
     <div class="slither-title">Countryballs War</div>
     
     <div class="avatar-container">
@@ -111,15 +139,22 @@
     <button class="btn-skin" id="btnChangeSkin">Cambiar Ball</button>
   </div>
 
+  <!-- HUD PRINCIPAL -->
   <div id="gameHUD">
     <div id="levelDisplay">Nivel: 1</div>
-    <div class="health-bar"><div id="healthFill" class="health-fill"></div></div>
+    <div class="health-bar">
+      <div id="healthFill" class="health-fill"></div>
+      <div id="healthText" class="health-text">100 / 100 HP</div>
+    </div>
+    <div id="ammoDisplay" class="ammo-display">Munición: 30 / 30</div>
   </div>
 
+  <!-- JOYSTICK IZQUIERDO -->
   <div id="joystickZone">
     <div id="joystickKnob"></div>
   </div>
 
+  <!-- ACCIONES DERECHA -->
   <div id="gameControls">
     <div class="control-btn btn-heal" id="btnHeal">CURAR</div>
     <div class="control-btn btn-build" id="btnBuild">MURO</div>
@@ -129,7 +164,7 @@
   <canvas id="gameCanvas"></canvas>
 
 <script>
-  // AUDIO
+  // AUDIO ENGINE
   let audioCtx = null;
   function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -150,7 +185,27 @@
     } catch(e){}
   }
 
-  // BANDERAS
+  // INTRO LOGIC
+  const introScreen = document.getElementById('introScreen');
+  let introDone = false;
+
+  function hideIntro() {
+    if (introDone) return;
+    introDone = true;
+    initAudio();
+    playSound(450, 0.1);
+    
+    introScreen.style.opacity = '0';
+    setTimeout(() => {
+      introScreen.style.display = 'none';
+      document.getElementById('lobbyScreen').style.display = 'flex';
+    }, 500);
+  }
+
+  introScreen.addEventListener('click', hideIntro);
+  introScreen.addEventListener('touchstart', (e) => { e.preventDefault(); hideIntro(); }, {passive: false});
+
+  // SKINS
   const skins = [
     { name: 'Portugal', flag: 'https://flagcdn.com/w320/pt.png' },
     { name: 'Brasil', flag: 'https://flagcdn.com/w320/br.png' },
@@ -180,7 +235,6 @@
   document.getElementById('btnChangeSkin').addEventListener('click', nextSkin);
   updateAvatar();
 
-  // IMÁGENES
   const loadedImages = {};
   skins.forEach(s => {
     const img = new Image();
@@ -192,9 +246,14 @@
   let canvas, ctx;
   let inGame = false;
   let gameLevel = 1;
-  let player = { x: 0, y: 0, radius: 32, hp: 100, maxHp: 100, img: new Image(), angle: 0 };
+  let player = { 
+    x: 0, y: 0, radius: 32, hp: 100, maxHp: 100, 
+    ammo: 30, maxAmmo: 30, isReloading: false,
+    img: new Image(), angle: 0 
+  };
   let joystick = { active: false, dx: 0, dy: 0, touchId: null };
   let isShooting = false;
+  let shootTouchId = null;
   let lastShootTime = 0;
 
   let foodList = [];
@@ -219,7 +278,7 @@
     canvas.height = window.innerHeight;
 
     player.img = loadedImages[skins[skinIdx].name];
-    player.x = 0; player.y = 0; player.hp = 100;
+    player.x = 0; player.y = 0; player.hp = 100; player.ammo = 30; player.isReloading = false;
     gameLevel = 1;
 
     spawnFood();
@@ -235,24 +294,40 @@
   function setupControls() {
     const jZone = document.getElementById('joystickZone');
     const jKnob = document.getElementById('joystickKnob');
-
-    // Mantenimiento de disparo táctil continuo
     const btnShoot = document.getElementById('btnShoot');
-    btnShoot.addEventListener('touchstart', (e) => { e.preventDefault(); isShooting = true; }, {passive: false});
-    btnShoot.addEventListener('touchend', (e) => { e.preventDefault(); isShooting = false; }, {passive: false});
+
+    // DISPARO MULTITOUCH
+    btnShoot.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      for(let t of e.changedTouches) {
+        shootTouchId = t.identifier;
+        isShooting = true;
+      }
+    }, {passive: false});
+
+    btnShoot.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      for(let t of e.changedTouches) {
+        if(t.identifier === shootTouchId) {
+          isShooting = false;
+          shootTouchId = null;
+        }
+      }
+    }, {passive: false});
+
     btnShoot.addEventListener('mousedown', () => { isShooting = true; });
-    btnShoot.addEventListener('mouseup', () => { isShooting = false; });
+    window.addEventListener('mouseup', () => { isShooting = false; });
 
-    document.getElementById('btnHeal').addEventListener('click', healPlayer);
     document.getElementById('btnHeal').addEventListener('touchstart', (e) => { e.preventDefault(); healPlayer(); }, {passive: false});
+    document.getElementById('btnHeal').addEventListener('click', healPlayer);
 
-    document.getElementById('btnBuild').addEventListener('click', buildStructure);
     document.getElementById('btnBuild').addEventListener('touchstart', (e) => { e.preventDefault(); buildStructure(); }, {passive: false});
+    document.getElementById('btnBuild').addEventListener('click', buildStructure);
 
-    // Control Joystick
+    // JOYSTICK MULTITOUCH
     jZone.addEventListener('touchstart', e => {
       e.preventDefault();
-      let t = e.touches[0];
+      let t = e.changedTouches[0];
       joystick.active = true;
       joystick.touchId = t.identifier;
       updateJoystick(t);
@@ -265,10 +340,15 @@
       }
     }, {passive: false});
 
-    const resetJoystick = () => {
-      joystick.active = false;
-      joystick.dx = 0; joystick.dy = 0;
-      jKnob.style.transform = `translate(0px, 0px)`;
+    const resetJoystick = (e) => {
+      for(let t of e.changedTouches) {
+        if(t.identifier === joystick.touchId) {
+          joystick.active = false;
+          joystick.dx = 0; joystick.dy = 0;
+          joystick.touchId = null;
+          jKnob.style.transform = `translate(0px, 0px)`;
+        }
+      }
     };
 
     window.addEventListener('touchend', resetJoystick);
@@ -344,6 +424,17 @@
     }
   }
 
+  function reloadAmmo() {
+    if(player.isReloading) return;
+    player.isReloading = true;
+    playSound(200, 0.3, 'triangle');
+    setTimeout(() => {
+      player.ammo = player.maxAmmo;
+      player.isReloading = false;
+      playSound(800, 0.1, 'sine');
+    }, 2000);
+  }
+
   function createExplosion(x, y, color) {
     playSound(150, 0.2, 'sawtooth');
     for(let i = 0; i < 15; i++) {
@@ -361,7 +452,15 @@
   function processContinuousShooting() {
     let now = Date.now();
     if(isShooting && now - lastShootTime > 180) {
+      if(player.isReloading) return;
+
+      if(player.ammo <= 0) {
+        reloadAmmo();
+        return;
+      }
+
       lastShootTime = now;
+      player.ammo--;
       playSound(300, 0.08, 'square');
       
       let targetAngle = player.angle;
@@ -429,6 +528,7 @@
     ctx.ellipse(eyeOffsetX + radius*0.2, eyeOffsetY - radius*0.05, radius*0.22, radius*0.28, angle, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#000000'; ctx.lineWidth = 2; ctx.stroke();
 
+    // BARRA DE VIDA SOBRE CADA ENEMIGO
     if(hp !== undefined && maxHp !== undefined) {
       let barW = radius * 1.6;
       let barH = 5;
@@ -510,89 +610,4 @@
       }
 
       if(!b.isEnemy) {
-        for(let bIdx = botBalls.length - 1; bIdx >= 0; bIdx--) {
-          let bot = botBalls[bIdx];
-          if(Math.hypot(b.x - bot.x, b.y - bot.y) < bot.radius) {
-            bot.hp -= 15;
-            createExplosion(bot.x, bot.y, '#ffcc00');
-            bullets.splice(i, 1);
-            
-            if(bot.hp <= 0) {
-              createExplosion(bot.x, bot.y, '#ff0055');
-              botBalls.splice(bIdx, 1);
-            }
-            break;
-          }
-        }
-      }
-    }
-
-    if(botBalls.length === 0) {
-      gameLevel++;
-      document.getElementById('levelDisplay').innerText = `Nivel: ${gameLevel}`;
-      spawnFood();
-      spawnBots();
-    }
-
-    for(let i = particles.length - 1; i >= 0; i--) {
-      let p = particles[i];
-      p.x += p.vx; p.y += p.vy; p.life--;
-      if(p.life <= 0) particles.splice(i, 1);
-    }
-
-    document.getElementById('healthFill').style.width = `${Math.max(0, (player.hp / player.maxHp)*100)}%`;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
-    let gridOffsetX = (-player.x + canvas.width/2) % 60;
-    let gridOffsetY = (-player.y + canvas.height/2) % 60;
-    for (let x = gridOffsetX; x < canvas.width; x += 60) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-    }
-    for (let y = gridOffsetY; y < canvas.height; y += 60) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-    }
-
-    foodList.forEach(f => {
-      let sx = f.x - player.x + canvas.width/2;
-      let sy = f.y - player.y + canvas.height/2;
-      ctx.beginPath(); ctx.arc(sx, sy, f.r, 0, Math.PI*2);
-      ctx.fillStyle = f.color; ctx.fill();
-    });
-
-    structures.forEach(st => {
-      let sx = st.x - player.x + canvas.width/2;
-      let sy = st.y - player.y + canvas.height/2;
-      ctx.fillStyle = '#475569'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 4;
-      ctx.fillRect(sx - st.size/2, sy - st.size/2, st.size, st.size);
-      ctx.strokeRect(sx - st.size/2, sy - st.size/2, st.size, st.size);
-    });
-
-    bullets.forEach(b => {
-      let sx = b.x - player.x + canvas.width/2;
-      let sy = b.y - player.y + canvas.height/2;
-      ctx.beginPath(); ctx.arc(sx, sy, 6, 0, Math.PI*2);
-      ctx.fillStyle = b.isEnemy ? '#ef4444' : '#f59e0b'; ctx.fill();
-    });
-
-    particles.forEach(p => {
-      let sx = p.x - player.x + canvas.width/2;
-      let sy = p.y - player.y + canvas.height/2;
-      ctx.beginPath(); ctx.arc(sx, sy, p.r, 0, Math.PI*2);
-      ctx.fillStyle = p.color; ctx.fill();
-    });
-
-    botBalls.forEach(bot => {
-      let sx = bot.x - player.x + canvas.width/2;
-      let sy = bot.y - player.y + canvas.height/2;
-      drawCountryball(sx, sy, bot.radius, bot.img, bot.angle, bot.hp, bot.maxHp);
-    });
-
-    drawCountryball(canvas.width/2, canvas.height/2, player.radius, player.img, player.angle);
-
-    requestAnimationFrame(loop);
-  }
-</script>
-</body>
-</html>
+        for(let bI
