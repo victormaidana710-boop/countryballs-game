@@ -65,8 +65,23 @@
     background: rgba(255,255,255,0.15); color: #fff; font-weight: bold; cursor: pointer;
   }
 
-  /* CANVAS DEL JUEGO */
+  /* CANVAS Y HUDS */
   #gameCanvas { width: 100%; height: 100%; display: block; background: #0b132b; }
+
+  #gameControls {
+    position: absolute; bottom: 20px; right: 20px; z-index: 50;
+    display: none; gap: 15px;
+  }
+
+  .control-btn {
+    width: 70px; height: 70px; border-radius: 50%; border: 3px solid #fff;
+    background: rgba(0,0,0,0.5); color: #fff; font-weight: 900; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer;
+  }
+  .btn-shoot { background: rgba(239, 68, 68, 0.8); }
+  .btn-build { background: rgba(59, 130, 246, 0.8); }
+  .control-btn:active { transform: scale(0.9); }
 </style>
 </head>
 <body>
@@ -92,6 +107,12 @@
     <button class="btn-skin" onclick="nextSkin()">Cambiar Ball</button>
   </div>
 
+  <!-- CONTROLES TÁCTILES DEL JUEGO -->
+  <div id="gameControls">
+    <div class="control-btn btn-build" onclick="buildStructure()">MURO</div>
+    <div class="control-btn btn-shoot" onclick="shootBullet()">FUEGO</div>
+  </div>
+
   <!-- CANVAS JUEGO -->
   <canvas id="gameCanvas"></canvas>
 
@@ -111,6 +132,21 @@
     } catch(e){}
   }
 
+  function playShootSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+    } catch(e){}
+  }
+
   // INTRO LOGIC
   function startApp() {
     playClick();
@@ -122,7 +158,7 @@
     }, 800);
   }
 
-  // BANDERAS DE LAS IMÁGENES (COUNTRYBALLS)
+  // BANDERAS COUNTRYBALLS
   const skins = [
     { name: 'Portugal', flag: 'https://flagcdn.com/w320/pt.png' },
     { name: 'Brasil', flag: 'https://flagcdn.com/w320/br.png' },
@@ -148,15 +184,16 @@
   }
   updateAvatar();
 
-  // MOTOR DE JUEGO (SLITHER STYLE PERO SOLO CON BALLS Y OJOS)
+  // MOTOR DE JUEGO
   let canvas, ctx;
   let inGame = false;
-  let player = { x: 0, y: 0, radius: 35, vx: 0, vy: 0, img: new Image(), angle: 0 };
+  let player = { x: 0, y: 0, radius: 35, img: new Image(), angle: 0 };
   let mouse = { x: 0, y: 0 };
   let foodList = [];
   let botBalls = [];
+  let bullets = [];
+  let structures = [];
 
-  // CARGA DE IMÁGENES
   const loadedImages = {};
   skins.forEach(s => {
     const img = new Image();
@@ -167,6 +204,7 @@
   function enterGame() {
     playClick();
     document.getElementById('lobbyScreen').style.display = 'none';
+    document.getElementById('gameControls').style.display = 'flex';
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     
@@ -179,7 +217,7 @@
     mouse.x = canvas.width / 2;
     mouse.y = canvas.height / 2;
 
-    // Generar comida brillante
+    // Generar comida
     foodList = [];
     for(let i = 0; i < 150; i++) {
       foodList.push({
@@ -190,7 +228,7 @@
       });
     }
 
-    // Generar otras Countryballs enemigas (Bots) en vez de gusanos
+    // Generar Bots
     botBalls = [];
     for(let i = 0; i < 15; i++) {
       let randomSkin = skins[Math.floor(Math.random() * skins.length)];
@@ -205,6 +243,7 @@
       });
     }
 
+    // Eventos de entrada
     window.addEventListener('mousemove', e => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
@@ -217,16 +256,49 @@
       }
     }, {passive: true});
 
+    window.addEventListener('keydown', e => {
+      if(e.code === 'Space') shootBullet();
+      if(e.code === 'KeyE') buildStructure();
+    });
+
+    canvas.addEventListener('mousedown', e => {
+      if(e.button === 0 && inGame) shootBullet();
+    });
+
     inGame = true;
     requestAnimationFrame(loop);
   }
 
-  // DIBUJAR OJOS CLÁSICOS COUNTRYBALLS EN CUALQUIER BOLA
+  // DISPARAR
+  function shootBullet() {
+    if(!inGame) return;
+    playShootSound();
+    bullets.push({
+      x: player.x + Math.cos(player.angle) * (player.radius + 10),
+      y: player.y + Math.sin(player.angle) * (player.radius + 10),
+      vx: Math.cos(player.angle) * 12,
+      vy: Math.sin(player.angle) * 12,
+      life: 80
+    });
+  }
+
+  // CONSTRUIR ESTRUCTURA/MURO
+  function buildStructure() {
+    if(!inGame) return;
+    playClick();
+    structures.push({
+      x: player.x + Math.cos(player.angle) * (player.radius + 40),
+      y: player.y + Math.sin(player.angle) * (player.radius + 40),
+      size: 45
+    });
+  }
+
+  // DIBUJAR COUNTRYBALLS CON OJOS
   function drawCountryball(x, y, radius, img, angle) {
     ctx.save();
     ctx.translate(x, y);
 
-    // Dibuja la pelota con la bandera
+    // Bandera
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.clip();
@@ -237,7 +309,7 @@
     }
     ctx.restore();
 
-    // Borde grueso estilo cómic
+    // Borde negro grueso
     ctx.save();
     ctx.translate(x, y);
     ctx.beginPath();
@@ -246,17 +318,17 @@
     ctx.lineWidth = 4;
     ctx.stroke();
 
-    // Dibuja los ojos blancos mirando hacia la dirección del movimiento
+    // Ojos blancos expresivos
     let eyeOffsetX = Math.cos(angle) * (radius * 0.3);
     let eyeOffsetY = Math.sin(angle) * (radius * 0.3);
 
-    // Ojo Izquierdo
+    // Izquierdo
     ctx.beginPath();
     ctx.ellipse(eyeOffsetX - radius*0.2, eyeOffsetY - radius*0.05, radius*0.22, radius*0.28, angle, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff'; ctx.fill();
     ctx.strokeStyle = '#000000'; ctx.lineWidth = 3; ctx.stroke();
 
-    // Ojo Derecho
+    // Derecho
     ctx.beginPath();
     ctx.ellipse(eyeOffsetX + radius*0.2, eyeOffsetY - radius*0.05, radius*0.22, radius*0.28, angle, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff'; ctx.fill();
@@ -268,7 +340,7 @@
   function loop() {
     if(!inGame) return;
 
-    // Dirección del jugador hacia el puntero
+    // Movimiento jugador
     let dx = mouse.x - canvas.width / 2;
     let dy = mouse.y - canvas.height / 2;
     player.angle = Math.atan2(dy, dx);
@@ -279,21 +351,28 @@
       player.y += Math.sin(player.angle) * 4;
     }
 
-    // Mover bots (Countryballs enemigas)
+    // Mover y actualizar proyectiles
+    for(let i = bullets.length - 1; i >= 0; i--) {
+      let b = bullets[i];
+      b.x += b.vx;
+      b.y += b.vy;
+      b.life--;
+      if(b.life <= 0) bullets.splice(i, 1);
+    }
+
+    // Mover bots
     botBalls.forEach(bot => {
       bot.x += bot.vx;
       bot.y += bot.vy;
       bot.angle = Math.atan2(bot.vy, bot.vx);
-
-      // Rebotar en bordes distantes
       if(Math.abs(bot.x) > 1800) bot.vx *= -1;
       if(Math.abs(bot.y) > 1800) bot.vy *= -1;
     });
 
-    // RENDERIZADO (CÁMARA CENTRADA EN EL JUGADOR)
+    // RENDERIZADO
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Fondo Cuadrícula / Malla Slither
+    // Fondo Malla
     ctx.strokeStyle = '#1e293b';
     ctx.lineWidth = 2;
     let gridOffsetX = (-player.x + canvas.width/2) % 60;
@@ -316,14 +395,38 @@
       ctx.fill();
     });
 
-    // Render Countryballs Enemigas (Bots)
+    // Render Estructuras / Muros
+    structures.forEach(st => {
+      let screenX = st.x - player.x + canvas.width/2;
+      let screenY = st.y - player.y + canvas.height/2;
+      ctx.fillStyle = '#64748b';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 4;
+      ctx.fillRect(screenX - st.size/2, screenY - st.size/2, st.size, st.size);
+      ctx.strokeRect(screenX - st.size/2, screenY - st.size/2, st.size, st.size);
+    });
+
+    // Render Proyectiles
+    bullets.forEach(b => {
+      let screenX = b.x - player.x + canvas.width/2;
+      let screenY = b.y - player.y + canvas.height/2;
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, 6, 0, Math.PI*2);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+
+    // Render Bots
     botBalls.forEach(bot => {
       let screenX = bot.x - player.x + canvas.width/2;
       let screenY = bot.y - player.y + canvas.height/2;
       drawCountryball(screenX, screenY, bot.radius, bot.img, bot.angle);
     });
 
-    // Render Jugador Principal
+    // Render Jugador
     drawCountryball(canvas.width/2, canvas.height/2, player.radius, player.img, player.angle);
 
     requestAnimationFrame(loop);
