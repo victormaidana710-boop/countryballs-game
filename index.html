@@ -75,6 +75,7 @@
             justify-content: center;
             font-size: 22px;
             background: #1e293b;
+            touch-action: manipulation;
         }
         .skin-item.selected {
             border-color: #facc15;
@@ -114,6 +115,8 @@
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(234, 179, 8, 0.5);
             border: 2px solid #fef08a;
+            touch-action: manipulation;
+            z-index: 30;
         }
         .btn-select:active { transform: scale(0.95); }
 
@@ -131,6 +134,7 @@
             font-weight: bold;
             cursor: pointer;
             font-size: 12px;
+            touch-action: manipulation;
         }
         .diff-btn.selected-diff {
             border-color: #ef4444;
@@ -249,13 +253,13 @@
 
         <div class="lobby-content">
             <div class="skins-grid">
-                <div class="skin-item selected" onclick="selectSkin(event, '🇺🇸', '#3b82f6', '#1e3a8a')">🇺🇸</div>
-                <div class="skin-item" onclick="selectSkin(event, '🇲🇽', '#22c55e', '#14532d')">🇲🇽</div>
-                <div class="skin-item" onclick="selectSkin(event, '🇦🇷', '#0ea5e9', '#0369a1')">🇦🇷</div>
-                <div class="skin-item" onclick="selectSkin(event, '🇧🇷', '#eab308', '#a16207')">🇧🇷</div>
-                <div class="skin-item" onclick="selectSkin(event, '🇩🇪', '#ef4444', '#7f1d1d')">🇩🇪</div>
-                <div class="skin-item" onclick="selectSkin(event, '🇪🇸', '#f97316', '#c2410c')">🇪🇸</div>
-                <div class="skin-item" onclick="selectSkin(event, '🇫🇷', '#6366f1', '#3730a3')">🇫🇷</div>
+                <div class="skin-item selected" data-emoji="🇺🇸" data-c1="#3b82f6" data-c2="#1e3a8a">🇺🇸</div>
+                <div class="skin-item" data-emoji="🇲🇽" data-c1="#22c55e" data-c2="#14532d">🇲🇽</div>
+                <div class="skin-item" data-emoji="🇦🇷" data-c1="#0ea5e9" data-c2="#0369a1">🇦🇷</div>
+                <div class="skin-item" data-emoji="🇧🇷" data-c1="#eab308" data-c2="#a16207">🇧🇷</div>
+                <div class="skin-item" data-emoji="🇩🇪" data-c1="#ef4444" data-c2="#7f1d1d">🇩🇪</div>
+                <div class="skin-item" data-emoji="🇪🇸" data-c1="#f97316" data-c2="#c2410c">🇪🇸</div>
+                <div class="skin-item" data-emoji="🇫🇷" data-c1="#6366f1" data-c2="#3730a3">🇫🇷</div>
             </div>
 
             <div class="preview-container">
@@ -263,12 +267,12 @@
                     <span style="font-size: 40px;">🇺🇸</span>
                     <span style="position: absolute; font-size: 35px;">🕶️</span>
                 </div>
-                <button class="btn-select" onclick="startGame()">SELECCIONAR</button>
+                <button id="startBtn" class="btn-select">SELECCIONAR</button>
             </div>
 
             <div class="difficulty-panel">
-                <div class="diff-btn selected-diff" id="btn-facil" onclick="setDifficulty('facil')">Partida: FÁCIL 🟢</div>
-                <div class="diff-btn" id="btn-dificil" onclick="setDifficulty('dificil')">Partida: DIFÍCIL 🔴</div>
+                <div class="diff-btn selected-diff" id="btn-facil" data-mode="facil">Partida: FÁCIL 🟢</div>
+                <div class="diff-btn" id="btn-dificil" data-mode="dificil">Partida: DIFÍCIL 🔴</div>
             </div>
         </div>
     </div>
@@ -327,22 +331,48 @@
         screen.orientation.lock("landscape").catch(() => {});
     }
 
-    function selectSkin(e, emoji, c1, c2) {
-        currentSkinEmoji = emoji;
-        skinColor1 = c1;
-        skinColor2 = c2;
-        document.getElementById("previewBall").style.background = `radial-gradient(circle at 35% 35%, ${c1} 0%, ${c2} 100%)`;
-        document.getElementById("previewBall").children[0].innerText = emoji;
-        document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('selected'));
-        if (e && e.currentTarget) e.currentTarget.classList.add('selected');
-    }
+    // Configurar eventos de selección de Skin (soporta clic y toque directo)
+    document.querySelectorAll('.skin-item').forEach(item => {
+        const selectSkinAction = (e) => {
+            e.preventDefault();
+            currentSkinEmoji = item.getAttribute('data-emoji');
+            skinColor1 = item.getAttribute('data-c1');
+            skinColor2 = item.getAttribute('data-c2');
+            
+            document.getElementById("previewBall").style.background = `radial-gradient(circle at 35% 35%, ${skinColor1} 0%, ${skinColor2} 100%)`;
+            document.getElementById("previewBall").children[0].innerText = currentSkinEmoji;
+            
+            document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('selected'));
+            item.classList.add('selected');
+        };
 
-    function setDifficulty(mode) {
-        difficultyMode = mode;
-        document.getElementById("btn-facil").classList.remove("selected-diff");
-        document.getElementById("btn-dificil").classList.remove("selected-diff");
-        document.getElementById("btn-" + mode).classList.add("selected-diff");
-    }
+        item.addEventListener("click", selectSkinAction);
+        item.addEventListener("touchstart", selectSkinAction, { passive: false });
+    });
+
+    // Configurar selección de Dificultad
+    ['facil', 'dificil'].forEach(mode => {
+        const btn = document.getElementById("btn-" + mode);
+        const setDiffAction = (e) => {
+            e.preventDefault();
+            difficultyMode = mode;
+            document.getElementById("btn-facil").classList.remove("selected-diff");
+            document.getElementById("btn-dificil").classList.remove("selected-diff");
+            btn.classList.add("selected-diff");
+        };
+
+        btn.addEventListener("click", setDiffAction);
+        btn.addEventListener("touchstart", setDiffAction, { passive: false });
+    });
+
+    // Botón Iniciar / Seleccionar partida
+    const startBtn = document.getElementById("startBtn");
+    const triggerStart = (e) => {
+        e.preventDefault();
+        startGame();
+    };
+    startBtn.addEventListener("click", triggerStart);
+    startBtn.addEventListener("touchstart", triggerStart, { passive: false });
 
     function startGame() {
         botSpeed = (difficultyMode === 'dificil') ? 3.0 : 1.5;
@@ -359,7 +389,6 @@
         player.x = mapWidth / 2;
         player.y = mapHeight / 2;
 
-        // Estructuras / obstáculos distribuidos por todo el mapa para esconderse
         structures = [
             { x: 400, y: 400, width: 180, height: 90 },
             { x: 800, y: 300, width: 100, height: 200 },
@@ -430,7 +459,6 @@
             }
         });
 
-        // Botón Disparar independiente con multitáctil
         const shootBtn = document.getElementById("shoot-btn");
         shootBtn.addEventListener("touchstart", (e) => {
             e.preventDefault();
@@ -440,7 +468,6 @@
             manualShoot();
         });
 
-        // Botón Botiquín independiente con multitáctil
         const medkitBtn = document.getElementById("medkit-btn");
         medkitBtn.addEventListener("touchstart", (e) => {
             e.preventDefault();
@@ -518,7 +545,6 @@
             nextX = Math.max(player.radius, Math.min(mapWidth - player.radius, nextX));
             nextY = Math.max(player.radius, Math.min(mapHeight - player.radius, nextY));
 
-            // Colisiones con estructuras rectangulares
             let collide = false;
             structures.forEach(s => {
                 if (nextX > s.x - player.radius && nextX < s.x + s.width + player.radius &&
@@ -556,32 +582,4 @@
                     if (nextBotX > s.x - bot.radius && nextBotX < s.x + s.width + bot.radius &&
                         nextBotY > s.y - bot.radius && nextBotY < s.y + s.height + bot.radius) {
                         botCollide = true;
-                    }
-                });
-
-                if (!botCollide) {
-                    bot.x = nextBotX;
-                    bot.y = nextBotY;
-                }
-            }
-        });
-
-        document.getElementById("alive-count").innerText = aliveBotsCount + 1;
-
-        bullets.forEach((b, index) => {
-            b.x += b.dx;
-            b.y += b.dy;
-            bots.forEach(bot => {
-                if (bot.alive && b.isPlayer && Math.hypot(b.x - bot.x, b.y - bot.y) < bot.radius + b.radius) {
-                    bot.alive = false;
-                    score += 1;
-                    document.getElementById("score").innerText = score;
-                    bullets.splice(index, 1);
-                }
-            });
-        });
-    }
-
-    function drawCountryball(x, y, radius, emoji, c1, c2) {
-        ctx.save();
-        let grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, rad
+         
