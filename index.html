@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Liga Bola - Battle Royale HD (Horizontal)</title>
+    <title>Liga Bola - Battle Royale HD</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -31,7 +31,6 @@
         }
         .hidden { display: none !important; }
 
-        /* Panel superior de Misión */
         .mission-panel {
             width: 100%;
             background: rgba(30, 41, 59, 0.95);
@@ -45,7 +44,6 @@
         .mission-title { font-size: 13px; font-weight: bold; color: #facc15; }
         .mission-progress { font-size: 11px; color: #94a3b8; }
 
-        /* Contenido del Lobby en Horizontal */
         .lobby-content {
             display: flex;
             flex: 1;
@@ -96,7 +94,7 @@
             height: 100px;
             border-radius: 50%;
             background: radial-gradient(circle at 35% 35%, #60a5fa 0%, #1d4ed8 70%, #1e3a8a 100%);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset -6px -6px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.7);
             border: 3px solid #1e293b;
             display: flex;
             align-items: center;
@@ -150,7 +148,6 @@
             z-index: 1;
         }
 
-        /* HUD FLOTANTE HORIZONTAL */
         #game-hud {
             position: absolute;
             top: 0;
@@ -172,7 +169,6 @@
             border: 1px solid rgba(255,255,255,0.15);
         }
 
-        /* JOYSTICK IZQUIERDO */
         #joystick-base {
             position: absolute;
             bottom: 25px;
@@ -197,7 +193,6 @@
             pointer-events: none;
         }
 
-        /* CONTROLES DERECHOS */
         .right-controls {
             position: absolute;
             bottom: 25px;
@@ -218,6 +213,7 @@
             font-size: 24px;
             cursor: pointer;
             position: relative;
+            touch-action: manipulation;
         }
         #shoot-btn {
             width: 85px;
@@ -225,6 +221,7 @@
             background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
             border: 4px solid #fff;
             font-size: 32px;
+            touch-action: manipulation;
         }
         .badge {
             position: absolute;
@@ -288,11 +285,11 @@
         </div>
 
         <div class="right-controls hud-element">
-            <div class="action-btn" onclick="useMedkit()">
+            <div class="action-btn" id="medkit-btn">
                 ➕
                 <div class="badge" id="medkit-count">2</div>
             </div>
-            <div class="action-btn" id="shoot-btn" onclick="manualShoot()">
+            <div class="action-btn" id="shoot-btn">
                 🎯
             </div>
         </div>
@@ -324,8 +321,8 @@
 
     let joystickActive = false;
     let joystickVector = { x: 0, y: 0 };
+    let joystickTouchId = null;
 
-    // Forzar orientación horizontal si el navegador lo soporta
     if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock("landscape").catch(() => {});
     }
@@ -362,26 +359,32 @@
         player.x = mapWidth / 2;
         player.y = mapHeight / 2;
 
+        // Estructuras / obstáculos distribuidos por todo el mapa para esconderse
         structures = [
-            { x: 300, y: 300, width: 140, height: 70 },
-            { x: 700, y: 200, width: 80, height: 180 },
-            { x: 1200, y: 400, width: 200, height: 90 },
-            { x: 400, y: 900, width: 100, height: 160 },
-            { x: 900, y: 800, width: 150, height: 150 }
+            { x: 400, y: 400, width: 180, height: 90 },
+            { x: 800, y: 300, width: 100, height: 200 },
+            { x: 1300, y: 500, width: 220, height: 100 },
+            { x: 500, y: 1000, width: 120, height: 180 },
+            { x: 1000, y: 900, width: 160, height: 160 },
+            { x: 1600, y: 900, width: 140, height: 90 },
+            { x: 400, y: 1600, width: 200, height: 100 },
+            { x: 900, y: 1500, width: 110, height: 210 },
+            { x: 1500, y: 1400, width: 180, height: 180 }
         ];
 
         bots = [];
         const botPalettes = [
             { emoji: "🇲🇽", c1: "#22c55e", c2: "#14532d" },
             { emoji: "🇦🇷", c1: "#0ea5e9", c2: "#0369a1" },
-            { emoji: "🇧🇷", c1: "#eab308", c2: "#a16207" }
+            { emoji: "🇧🇷", c1: "#eab308", c2: "#a16207" },
+            { emoji: "🇩🇪", c1: "#ef4444", c2: "#7f1d1d" }
         ];
 
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 10; i++) {
             let pal = botPalettes[Math.floor(Math.random() * botPalettes.length)];
             bots.push({
-                x: Math.random() * (mapWidth - 200) + 100,
-                y: Math.random() * (mapHeight - 200) + 100,
+                x: Math.random() * (mapWidth - 400) + 200,
+                y: Math.random() * (mapHeight - 400) + 200,
                 radius: 28,
                 emoji: pal.emoji,
                 c1: pal.c1,
@@ -390,46 +393,88 @@
             });
         }
 
-        setupJoystick();
+        setupMultitouchControls();
         gameRunning = true;
         requestAnimationFrame(loop);
     }
 
-    function setupJoystick() {
+    function setupMultitouchControls() {
         const base = document.getElementById("joystick-base");
         const stick = document.getElementById("joystick-stick");
         const maxDist = 35;
 
-        function handleStartMove(e) {
+        base.addEventListener("touchstart", (e) => {
             e.preventDefault();
-            const rect = base.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
+            let touch = e.changedTouches[0];
+            joystickTouchId = touch.identifier;
+            updateJoystickPos(touch, base, stick, maxDist);
+        }, { passive: false });
 
-            let touch = e.touches ? e.touches[0] : e;
-            let dx = touch.clientX - centerX;
-            let dy = touch.clientY - centerY;
-            let dist = Math.hypot(dx, dy);
-
-            if (dist > maxDist) {
-                dx = (dx / dist) * maxDist;
-                dy = (dy / dist) * maxDist;
+        window.addEventListener("touchmove", (e) => {
+            if (joystickTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                let touch = e.changedTouches[i];
+                if (touch.identifier === joystickTouchId) {
+                    updateJoystickPos(touch, base, stick, maxDist);
+                }
             }
+        }, { passive: false });
 
-            stick.style.transform = `translate(${dx}px, ${dy}px)`;
-            joystickVector = { x: dx / maxDist, y: dy / maxDist };
-            joystickActive = true;
+        window.addEventListener("touchend", (e) => {
+            if (joystickTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                let touch = e.changedTouches[i];
+                if (touch.identifier === joystickTouchId) {
+                    resetJoystick(stick);
+                }
+            }
+        });
+
+        // Botón Disparar independiente con multitáctil
+        const shootBtn = document.getElementById("shoot-btn");
+        shootBtn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            manualShoot();
+        }, { passive: false });
+        shootBtn.addEventListener("click", () => {
+            manualShoot();
+        });
+
+        // Botón Botiquín independiente con multitáctil
+        const medkitBtn = document.getElementById("medkit-btn");
+        medkitBtn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            useMedkit();
+        }, { passive: false });
+        medkitBtn.addEventListener("click", () => {
+            useMedkit();
+        });
+    }
+
+    function updateJoystickPos(touch, base, stick, maxDist) {
+        const rect = base.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        let dx = touch.clientX - centerX;
+        let dy = touch.clientY - centerY;
+        let dist = Math.hypot(dx, dy);
+
+        if (dist > maxDist) {
+            dx = (dx / dist) * maxDist;
+            dy = (dy / dist) * maxDist;
         }
 
-        function handleEnd() {
-            stick.style.transform = `translate(0px, 0px)`;
-            joystickVector = { x: 0, y: 0 };
-            joystickActive = false;
-        }
+        stick.style.transform = `translate(${dx}px, ${dy}px)`;
+        joystickVector = { x: dx / maxDist, y: dy / maxDist };
+        joystickActive = true;
+    }
 
-        base.addEventListener("touchstart", handleStartMove, { passive: false });
-        base.addEventListener("touchmove", handleStartMove, { passive: false });
-        base.addEventListener("touchend", handleEnd);
+    function resetJoystick(stick) {
+        stick.style.transform = `translate(0px, 0px)`;
+        joystickVector = { x: 0, y: 0 };
+        joystickActive = false;
+        joystickTouchId = null;
     }
 
     function manualShoot() {
@@ -469,8 +514,23 @@
         if (joystickActive && (joystickVector.x !== 0 || joystickVector.y !== 0)) {
             let nextX = player.x + joystickVector.x * player.speed;
             let nextY = player.y + joystickVector.y * player.speed;
-            player.x = Math.max(player.radius, Math.min(mapWidth - player.radius, nextX));
-            player.y = Math.max(player.radius, Math.min(mapHeight - player.radius, nextY));
+
+            nextX = Math.max(player.radius, Math.min(mapWidth - player.radius, nextX));
+            nextY = Math.max(player.radius, Math.min(mapHeight - player.radius, nextY));
+
+            // Colisiones con estructuras rectangulares
+            let collide = false;
+            structures.forEach(s => {
+                if (nextX > s.x - player.radius && nextX < s.x + s.width + player.radius &&
+                    nextY > s.y - player.radius && nextY < s.y + s.height + player.radius) {
+                    collide = true;
+                }
+            });
+
+            if (!collide) {
+                player.x = nextX;
+                player.y = nextY;
+            }
         }
 
         let aliveBotsCount = 0;
@@ -478,17 +538,30 @@
             if (bot.alive) {
                 aliveBotsCount++;
                 let angle = Math.atan2(player.y - bot.y, player.x - bot.x);
-                bot.x += Math.cos(angle) * botSpeed;
-                bot.y += Math.sin(angle) * botSpeed;
+                let nextBotX = bot.x + Math.cos(angle) * botSpeed;
+                let nextBotY = bot.y + Math.sin(angle) * botSpeed;
 
                 if (Math.hypot(player.x - bot.x, player.y - bot.y) < player.radius + bot.radius) {
                     playerHp -= 0.5;
                     document.getElementById("player-hp").innerText = Math.max(0, Math.floor(playerHp));
                     if (playerHp <= 0) {
                         gameRunning = false;
-                        alert("¡Eliminado!");
+                        alert("¡Has sido eliminado!");
                         location.reload();
                     }
+                }
+
+                let botCollide = false;
+                structures.forEach(s => {
+                    if (nextBotX > s.x - bot.radius && nextBotX < s.x + s.width + bot.radius &&
+                        nextBotY > s.y - bot.radius && nextBotY < s.y + s.height + bot.radius) {
+                        botCollide = true;
+                    }
+                });
+
+                if (!botCollide) {
+                    bot.x = nextBotX;
+                    bot.y = nextBotY;
                 }
             }
         });
@@ -511,71 +584,4 @@
 
     function drawCountryball(x, y, radius, emoji, c1, c2) {
         ctx.save();
-        let grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
-        grad.addColorStop(0, c1);
-        grad.addColorStop(0.8, c2);
-        grad.addColorStop(1, "#020617");
-
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#0f172a";
-        ctx.stroke();
-
-        ctx.font = `${radius * 1.1}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(emoji, x, y);
-        ctx.fillText("🕶️", x, y - 2);
-        ctx.restore();
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
-
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-        ctx.lineWidth = 2;
-        for (let x = 0; x < mapWidth; x += 100) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, mapHeight); ctx.stroke();
-        }
-        for (let y = 0; y < mapHeight; y += 100) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(mapWidth, y); ctx.stroke();
-        }
-
-        structures.forEach(s => {
-            ctx.fillStyle = "#334155";
-            ctx.fillRect(s.x, s.y, s.width, s.height);
-        });
-
-        bots.forEach(bot => {
-            if (bot.alive) drawCountryball(bot.x, bot.y, bot.radius, bot.emoji, bot.c1, bot.c2);
-        });
-
-        drawCountryball(player.x, player.y, player.radius, currentSkinEmoji, skinColor1, skinColor2);
-
-        ctx.fillStyle = "#facc15";
-        bullets.forEach(b => {
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        ctx.restore();
-    }
-
-    function loop() {
-        if (gameRunning) {
-            update();
-            draw();
-            requestAnimationFrame(loop);
-        }
-    }
-</script>
-
-</body>
-    </html>
-    
+        let grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, rad
