@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Liga Bola - Battle Royale HD</title>
+    <title>Liga Bola - Battle Royale HD (Horizontal)</title>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            margin: 0;
             background-color: #0f172a;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             touch-action: none;
             color: white;
+            width: 100vw;
+            height: 100vh;
         }
 
         .screen {
@@ -26,97 +27,94 @@
             background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
             z-index: 20;
             padding: 15px;
+            justify-content: space-between;
         }
         .hidden { display: none !important; }
 
+        /* Panel superior de Misión */
         .mission-panel {
+            width: 100%;
             background: rgba(30, 41, 59, 0.95);
             border: 2px solid #475569;
-            border-radius: 12px;
-            padding: 12px 18px;
-            margin-bottom: 15px;
+            border-radius: 10px;
+            padding: 8px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
-        .mission-title { font-size: 15px; font-weight: bold; color: #facc15; }
-        .mission-progress { font-size: 13px; color: #94a3b8; }
+        .mission-title { font-size: 13px; font-weight: bold; color: #facc15; }
+        .mission-progress { font-size: 11px; color: #94a3b8; }
 
+        /* Contenido del Lobby en Horizontal */
         .lobby-content {
             display: flex;
             flex: 1;
-            gap: 20px;
             align-items: center;
-            justify-content: space-between;
+            justify-content: space-around;
+            width: 100%;
+            padding: 10px 0;
         }
 
         .skins-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
             background: rgba(15, 23, 42, 0.9);
-            padding: 15px;
-            border-radius: 14px;
+            padding: 10px;
+            border-radius: 12px;
             border: 2px solid #334155;
-            max-height: 340px;
+            max-height: 200px;
             overflow-y: auto;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
         }
         .skin-item {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border: 3px solid #475569;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
+            font-size: 22px;
             background: #1e293b;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .skin-item.selected {
             border-color: #facc15;
-            transform: scale(1.15);
-            box-shadow: 0 0 15px rgba(250, 204, 21, 0.8);
+            transform: scale(1.1);
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.8);
         }
 
         .preview-container {
-            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
         
-        /* Contenedor HD para la vista previa */
         .preview-ball-hd {
-            width: 130px;
-            height: 130px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             background: radial-gradient(circle at 35% 35%, #60a5fa 0%, #1d4ed8 70%, #1e3a8a 100%);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.7), inset -8px -8px 20px rgba(0,0,0,0.5), inset 6px 6px 15px rgba(255,255,255,0.4);
-            border: 4px solid #1e293b;
-            position: relative;
-            margin-bottom: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset -6px -6px 15px rgba(0,0,0,0.5);
+            border: 3px solid #1e293b;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            margin-bottom: 12px;
         }
 
         .btn-select {
             background: linear-gradient(135deg, #eab308, #ca8a04);
             color: #0f172a;
             border: none;
-            padding: 15px 45px;
-            font-size: 18px;
+            padding: 12px 35px;
+            font-size: 16px;
             font-weight: 900;
             border-radius: 10px;
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(234, 179, 8, 0.5);
-            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.5);
             border: 2px solid #fef08a;
         }
         .btn-select:active { transform: scale(0.95); }
@@ -124,22 +122,17 @@
         .difficulty-panel {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            width: 220px;
+            gap: 8px;
         }
         .diff-btn {
             background: #1e293b;
             color: white;
             border: 2px solid #475569;
-            padding: 14px;
-            border-radius: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 12px;
         }
         .diff-btn.selected-diff {
             border-color: #ef4444;
@@ -149,9 +142,15 @@
         canvas {
             display: block;
             background: #166534;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
 
-        /* HUD FLOTANTE HD */
+        /* HUD FLOTANTE HORIZONTAL */
         #game-hud {
             position: absolute;
             top: 0;
@@ -167,20 +166,19 @@
             top: 15px;
             left: 15px;
             background: rgba(15, 23, 42, 0.85);
-            padding: 12px 18px;
+            padding: 10px 15px;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 12px;
             border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        /* JOYSTICK HD */
+        /* JOYSTICK IZQUIERDO */
         #joystick-base {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
-            width: 130px;
-            height: 130px;
+            bottom: 25px;
+            left: 25px;
+            width: 110px;
+            height: 110px;
             background: radial-gradient(circle, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.8) 100%);
             border: 3px solid rgba(255, 255, 255, 0.25);
             border-radius: 50%;
@@ -188,55 +186,45 @@
             align-items: center;
             justify-content: center;
             touch-action: none;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
         }
-        #joystick-base::before { content: '▲'; position: absolute; top: 8px; color: rgba(255,255,255,0.6); font-size: 11px; }
-        #joystick-base::after { content: '▼'; position: absolute; bottom: 8px; color: rgba(255,255,255,0.6); font-size: 11px; }
-        .joystick-arrow-l { position: absolute; left: 10px; color: rgba(255,255,255,0.6); font-size: 11px; }
-        .joystick-arrow-r { position: absolute; right: 10px; color: rgba(255,255,255,0.6); font-size: 11px; }
-
         #joystick-stick {
-            width: 55px;
-            height: 55px;
+            width: 45px;
+            height: 45px;
             background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 60%, #64748b 100%);
             border: 2px solid #fff;
             border-radius: 50%;
             position: absolute;
             pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
-        /* CONTROLES DERECHOS HD */
+        /* CONTROLES DERECHOS */
         .right-controls {
             position: absolute;
-            bottom: 30px;
-            right: 30px;
+            bottom: 25px;
+            right: 25px;
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 15px;
         }
         .action-btn {
-            width: 75px;
-            height: 75px;
+            width: 65px;
+            height: 65px;
             background: rgba(30, 41, 59, 0.85);
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
+            font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
             position: relative;
         }
-        .action-btn:active { transform: scale(0.92); }
         #shoot-btn {
-            width: 95px;
-            height: 95px;
+            width: 85px;
+            height: 85px;
             background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
             border: 4px solid #fff;
-            font-size: 38px;
-            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.6);
+            font-size: 32px;
         }
         .badge {
             position: absolute;
@@ -244,24 +232,10 @@
             right: 5px;
             background: #0f172a;
             color: #fff;
-            font-size: 12px;
-            padding: 2px 7px;
+            font-size: 11px;
+            padding: 2px 5px;
             border-radius: 10px;
             font-weight: bold;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        #minimap {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 100px;
-            height: 100px;
-            background: rgba(15, 23, 42, 0.85);
-            border: 2px solid rgba(255,255,255,0.25);
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -270,39 +244,34 @@
     <div id="lobbyScreen" class="screen">
         <div class="mission-panel">
             <div>
-                <div class="mission-title">⭐ LIGA BOLA: BATTLE ROYALE HD</div>
-                <div class="mission-progress">Modo Gráfico: Alta Definición</div>
+                <div class="mission-title">OPERACIÓN: LIGA BOLA (HORIZONTAL)</div>
+                <div class="mission-progress">Progreso: 45%</div>
             </div>
-            <div style="font-size: 13px; color: #facc15;">🎯 Supervivencia Activa</div>
+            <div style="font-size: 12px; color: #facc15;">🎯 Elimina a 100</div>
         </div>
 
         <div class="lobby-content">
             <div class="skins-grid">
-                <div class="skin-item selected" onclick="selectSkin('US', '#3b82f6', '#1e3a8a')">🇺🇸</div>
-                <div class="skin-item" onclick="selectSkin('MX', '#22c55e', '#14532d')">🇲🇽</div>
-                <div class="skin-item" onclick="selectSkin('AR', '#0ea5e9', '#0369a1')">🇦🇷</div>
-                <div class="skin-item" onclick="selectSkin('BR', '#eab308', '#a16207')">🇧🇷</div>
-                <div class="skin-item" onclick="selectSkin('DE', '#ef4444', '#7f1d1d')">🇩🇪</div>
-                <div class="skin-item" onclick="selectSkin('ES', '#f97316', '#c2410c')">🇪🇸</div>
-                <div class="skin-item" onclick="selectSkin('FR', '#6366f1', '#3730a3')">🇫🇷</div>
-                <div class="skin-item" onclick="selectSkin('JP', '#ec4899', '#be185d')">🇯🇵</div>
-                <div class="skin-item" onclick="selectSkin('CA', '#dc2626', '#991b1b')">🇨🇦</div>
+                <div class="skin-item selected" onclick="selectSkin(event, '🇺🇸', '#3b82f6', '#1e3a8a')">🇺🇸</div>
+                <div class="skin-item" onclick="selectSkin(event, '🇲🇽', '#22c55e', '#14532d')">🇲🇽</div>
+                <div class="skin-item" onclick="selectSkin(event, '🇦🇷', '#0ea5e9', '#0369a1')">🇦🇷</div>
+                <div class="skin-item" onclick="selectSkin(event, '🇧🇷', '#eab308', '#a16207')">🇧🇷</div>
+                <div class="skin-item" onclick="selectSkin(event, '🇩🇪', '#ef4444', '#7f1d1d')">🇩🇪</div>
+                <div class="skin-item" onclick="selectSkin(event, '🇪🇸', '#f97316', '#c2410c')">🇪🇸</div>
+                <div class="skin-item" onclick="selectSkin(event, '🇫🇷', '#6366f1', '#3730a3')">🇫🇷</div>
             </div>
 
             <div class="preview-container">
                 <div id="previewBall" class="preview-ball-hd">
-                    <span style="font-size: 55px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">😎</span>
+                    <span style="font-size: 40px;">🇺🇸</span>
+                    <span style="position: absolute; font-size: 35px;">🕶️</span>
                 </div>
                 <button class="btn-select" onclick="startGame()">SELECCIONAR</button>
             </div>
 
             <div class="difficulty-panel">
-                <div class="diff-btn selected-diff" id="btn-facil" onclick="setDifficulty('facil')">
-                    <span>Partida: FÁCIL</span> 🟢
-                </div>
-                <div class="diff-btn" id="btn-dificil" onclick="setDifficulty('dificil')">
-                    <span>Partida: DIFÍCIL</span> 🔴
-                </div>
+                <div class="diff-btn selected-diff" id="btn-facil" onclick="setDifficulty('facil')">Partida: FÁCIL 🟢</div>
+                <div class="diff-btn" id="btn-dificil" onclick="setDifficulty('dificil')">Partida: DIFÍCIL 🔴</div>
             </div>
         </div>
     </div>
@@ -314,32 +283,28 @@
             <div>🎯 Elim.: <span id="score">0</span></div>
         </div>
 
-        <div id="minimap" class="hud-element"></div>
-
         <div id="joystick-base" class="hud-element">
-            <span class="joystick-arrow-l">◀</span>
-            <span class="joystick-arrow-r">▶</span>
             <div id="joystick-stick"></div>
         </div>
 
         <div class="right-controls hud-element">
-            <div class="action-btn" ontouchstart="useMedkit()" onclick="useMedkit()" title="Botiquín">
+            <div class="action-btn" onclick="useMedkit()">
                 ➕
                 <div class="badge" id="medkit-count">2</div>
             </div>
-            <div class="action-btn" id="shoot-btn" ontouchstart="manualShoot()" onclick="manualShoot()" title="Disparar">
+            <div class="action-btn" id="shoot-btn" onclick="manualShoot()">
                 🎯
             </div>
         </div>
     </div>
 
-    <canvas id="gameCanvas" class="hidden"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
 <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    let currentSkinCode = "US";
+    let currentSkinEmoji = "🇺🇸";
     let skinColor1 = "#3b82f6";
     let skinColor2 = "#1e3a8a";
     let difficultyMode = "facil";
@@ -360,13 +325,19 @@
     let joystickActive = false;
     let joystickVector = { x: 0, y: 0 };
 
-    function selectSkin(code, c1, c2) {
-        currentSkinCode = code;
+    // Forzar orientación horizontal si el navegador lo soporta
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock("landscape").catch(() => {});
+    }
+
+    function selectSkin(e, emoji, c1, c2) {
+        currentSkinEmoji = emoji;
         skinColor1 = c1;
         skinColor2 = c2;
         document.getElementById("previewBall").style.background = `radial-gradient(circle at 35% 35%, ${c1} 0%, ${c2} 100%)`;
+        document.getElementById("previewBall").children[0].innerText = emoji;
         document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('selected'));
-        event.target.classList.add('selected');
+        if (e && e.currentTarget) e.currentTarget.classList.add('selected');
     }
 
     function setDifficulty(mode) {
@@ -384,13 +355,9 @@
 
         document.getElementById("lobbyScreen").classList.add("hidden");
         document.getElementById("game-hud").classList.remove("hidden");
-        canvas.classList.remove("hidden");
 
-        // Ajuste de escala HD para pantallas de alta resolución (Retina/FHD móviles)
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = window.innerWidth * dpr;
-        canvas.height = window.innerHeight * dpr;
-        ctx.scale(dpr, dpr);
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
         player.x = mapWidth / 2;
         player.y = mapHeight / 2;
@@ -400,29 +367,23 @@
             { x: 700, y: 200, width: 80, height: 180 },
             { x: 1200, y: 400, width: 200, height: 90 },
             { x: 400, y: 900, width: 100, height: 160 },
-            { x: 900, y: 800, width: 150, height: 150 },
-            { x: 1500, y: 800, width: 120, height: 80 },
-            { x: 300, y: 1500, width: 180, height: 90 },
-            { x: 800, y: 1400, width: 90, height: 190 },
-            { x: 1400, y: 1300, width: 160, height: 160 }
+            { x: 900, y: 800, width: 150, height: 150 }
         ];
 
         bots = [];
         const botPalettes = [
-            { code: "MX", c1: "#22c55e", c2: "#14532d" },
-            { code: "AR", c1: "#0ea5e9", c2: "#0369a1" },
-            { code: "BR", c1: "#eab308", c2: "#a16207" },
-            { code: "DE", c1: "#ef4444", c2: "#7f1d1d" },
-            { code: "FR", c1: "#6366f1", c2: "#3730a3" }
+            { emoji: "🇲🇽", c1: "#22c55e", c2: "#14532d" },
+            { emoji: "🇦🇷", c1: "#0ea5e9", c2: "#0369a1" },
+            { emoji: "🇧🇷", c1: "#eab308", c2: "#a16207" }
         ];
 
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 8; i++) {
             let pal = botPalettes[Math.floor(Math.random() * botPalettes.length)];
             bots.push({
                 x: Math.random() * (mapWidth - 200) + 100,
                 y: Math.random() * (mapHeight - 200) + 100,
                 radius: 28,
-                code: pal.code,
+                emoji: pal.emoji,
                 c1: pal.c1,
                 c2: pal.c2,
                 alive: true
@@ -431,13 +392,13 @@
 
         setupJoystick();
         gameRunning = true;
-        loop();
+        requestAnimationFrame(loop);
     }
 
     function setupJoystick() {
         const base = document.getElementById("joystick-base");
         const stick = document.getElementById("joystick-stick");
-        const maxDist = 45;
+        const maxDist = 35;
 
         function handleStartMove(e) {
             e.preventDefault();
@@ -466,19 +427,9 @@
             joystickActive = false;
         }
 
-        base.addEventListener("touchstart", handleStartMove);
-        base.addEventListener("touchmove", handleStartMove);
+        base.addEventListener("touchstart", handleStartMove, { passive: false });
+        base.addEventListener("touchmove", handleStartMove, { passive: false });
         base.addEventListener("touchend", handleEnd);
-
-        base.addEventListener("mousedown", (e) => {
-            const onMouseMove = (ev) => handleStartMove(ev);
-            const onMouseUp = () => {
-                window.removeEventListener("mousemove", onMouseMove);
-                handleEnd();
-            };
-            window.addEventListener("mousemove", onMouseMove);
-            window.addEventListener("mouseup", onMouseUp, { once: true });
-        });
     }
 
     function manualShoot() {
@@ -499,7 +450,7 @@
         bullets.push({
             x: player.x, y: player.y,
             dx: Math.cos(angle) * 12, dy: Math.sin(angle) * 12,
-            radius: 7, isPlayer: true
+            radius: 6, isPlayer: true
         });
     }
 
@@ -518,22 +469,8 @@
         if (joystickActive && (joystickVector.x !== 0 || joystickVector.y !== 0)) {
             let nextX = player.x + joystickVector.x * player.speed;
             let nextY = player.y + joystickVector.y * player.speed;
-
-            nextX = Math.max(player.radius, Math.min(mapWidth - player.radius, nextX));
-            nextY = Math.max(player.radius, Math.min(mapHeight - player.radius, nextY));
-
-            let collide = false;
-            structures.forEach(s => {
-                if (nextX > s.x - player.radius && nextX < s.x + s.width + player.radius && 
-                    nextY > s.y - player.radius && nextY < s.y + s.height + player.radius) {
-                    collide = true;
-                }
-            });
-
-            if (!collide) {
-                player.x = nextX;
-                player.y = nextY;
-            }
+            player.x = Math.max(player.radius, Math.min(mapWidth - player.radius, nextX));
+            player.y = Math.max(player.radius, Math.min(mapHeight - player.radius, nextY));
         }
 
         let aliveBotsCount = 0;
@@ -541,26 +478,104 @@
             if (bot.alive) {
                 aliveBotsCount++;
                 let angle = Math.atan2(player.y - bot.y, player.x - bot.x);
-                let nextBotX = bot.x + Math.cos(angle) * botSpeed;
-                let nextBotY = bot.y + Math.sin(angle) * botSpeed;
+                bot.x += Math.cos(angle) * botSpeed;
+                bot.y += Math.sin(angle) * botSpeed;
 
-                let distToPlayer = Math.hypot(player.x - bot.x, player.y - bot.y);
-                if (distToPlayer < player.radius + bot.radius) {
-                    playerHp -= 0.6;
+                if (Math.hypot(player.x - bot.x, player.y - bot.y) < player.radius + bot.radius) {
+                    playerHp -= 0.5;
                     document.getElementById("player-hp").innerText = Math.max(0, Math.floor(playerHp));
                     if (playerHp <= 0) {
                         gameRunning = false;
-                        alert("¡Has sido eliminado! Fin de la partida.");
+                        alert("¡Eliminado!");
                         location.reload();
                     }
                 }
+            }
+        });
 
-                let botCollide = false;
-                structures.forEach(s => {
-                    if (nextBotX > s.x - bot.radius && nextBotX < s.x + s.width + bot.radius && 
-                        nextBotY > s.y - bot.radius && nextBotY < s.y + s.height + bot.radius) {
-                        botCollide = true;
-                    }
-                });
+        document.getElementById("alive-count").innerText = aliveBotsCount + 1;
 
-                i
+        bullets.forEach((b, index) => {
+            b.x += b.dx;
+            b.y += b.dy;
+            bots.forEach(bot => {
+                if (bot.alive && b.isPlayer && Math.hypot(b.x - bot.x, b.y - bot.y) < bot.radius + b.radius) {
+                    bot.alive = false;
+                    score += 1;
+                    document.getElementById("score").innerText = score;
+                    bullets.splice(index, 1);
+                }
+            });
+        });
+    }
+
+    function drawCountryball(x, y, radius, emoji, c1, c2) {
+        ctx.save();
+        let grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
+        grad.addColorStop(0, c1);
+        grad.addColorStop(0.8, c2);
+        grad.addColorStop(1, "#020617");
+
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#0f172a";
+        ctx.stroke();
+
+        ctx.font = `${radius * 1.1}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(emoji, x, y);
+        ctx.fillText("🕶️", x, y - 2);
+        ctx.restore();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.lineWidth = 2;
+        for (let x = 0; x < mapWidth; x += 100) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, mapHeight); ctx.stroke();
+        }
+        for (let y = 0; y < mapHeight; y += 100) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(mapWidth, y); ctx.stroke();
+        }
+
+        structures.forEach(s => {
+            ctx.fillStyle = "#334155";
+            ctx.fillRect(s.x, s.y, s.width, s.height);
+        });
+
+        bots.forEach(bot => {
+            if (bot.alive) drawCountryball(bot.x, bot.y, bot.radius, bot.emoji, bot.c1, bot.c2);
+        });
+
+        drawCountryball(player.x, player.y, player.radius, currentSkinEmoji, skinColor1, skinColor2);
+
+        ctx.fillStyle = "#facc15";
+        bullets.forEach(b => {
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.restore();
+    }
+
+    function loop() {
+        if (gameRunning) {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+    }
+</script>
+
+</body>
+    </html>
+    
