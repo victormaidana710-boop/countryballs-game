@@ -14,6 +14,8 @@
             touch-action: none;
             color: white;
         }
+
+        /* LOBBY IDÉNTICO A LA REFERENCIA */
         .screen {
             position: absolute;
             top: 0;
@@ -22,67 +24,138 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
             z-index: 20;
-            padding: 20px;
+            padding: 15px;
         }
-        .hidden {
-            display: none !important;
-        }
-        h1 {
-            font-size: 28px;
-            color: #facc15;
-            margin-bottom: 10px;
-            text-align: center;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        p {
-            color: #94a3b8;
-            font-size: 15px;
+        .hidden { display: none !important; }
+
+        .mission-panel {
+            background: rgba(30, 41, 59, 0.9);
+            border: 2px solid #475569;
+            border-radius: 10px;
+            padding: 10px 15px;
             margin-bottom: 15px;
-        }
-        .btn {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            border: none;
-            padding: 14px 35px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 30px;
-            margin: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-        }
-        .skins-container {
             display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
+            justify-content: space-between;
+            align-items: center;
         }
-        .skin-option {
-            width: 65px;
-            height: 65px;
+        .mission-title { font-size: 14px; font-weight: bold; color: #facc15; }
+        .mission-progress { font-size: 12px; color: #94a3b8; }
+
+        .lobby-content {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Cuadrícula de Skins / Países */
+        .skins-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #334155;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .skin-item {
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
-            border: 4px solid #334155;
+            border: 3px solid #475569;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 24px;
+            background: #1e293b;
+            transition: transform 0.2s;
         }
-        .skin-option.selected {
+        .skin-item.selected {
             border-color: #facc15;
             transform: scale(1.15);
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
         }
+
+        /* Zona central de vista previa del personaje seleccionado */
+        .preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-ball {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            border: 5px solid #334155;
+            position: relative;
+            margin-bottom: 20px;
+            font-size: 45px;
+        }
+        /* Gafas de sol para la vista previa */
+        .preview-ball::after {
+            content: '🕶️';
+            position: absolute;
+            font-size: 55px;
+        }
+
+        .btn-select {
+            background: linear-gradient(135deg, #eab308, #ca8a04);
+            color: #0f172a;
+            border: none;
+            padding: 14px 40px;
+            font-size: 18px;
+            font-weight: 900;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+            letter-spacing: 1px;
+            border: 2px solid #fef08a;
+        }
+        .btn-select:active { transform: scale(0.95); }
+
+        /* Panel derecho de botones de dificultad */
+        .difficulty-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 220px;
+        }
+        .diff-btn {
+            background: #1e293b;
+            color: white;
+            border: 2px solid #475569;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .diff-btn.selected-diff {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+        }
+
         canvas {
             display: block;
             background: #15803d;
         }
 
-        /* HUD FLOTANTE ESTILO FREE FIRE */
+        /* HUD FLOTANTE DEL JUEGO */
         #game-hud {
             position: absolute;
             top: 0;
@@ -92,70 +165,97 @@
             pointer-events: none;
             z-index: 10;
         }
-        .hud-element {
-            pointer-events: auto;
-        }
+        .hud-element { pointer-events: auto; }
         .top-left-info {
             position: absolute;
             top: 15px;
             left: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 15px;
             border-radius: 8px;
             font-size: 14px;
             border: 1px solid rgba(255,255,255,0.1);
         }
-        /* Botón de disparo flotante derecho */
-        #shoot-btn {
-            position: absolute;
-            bottom: 40px;
-            right: 40px;
-            width: 85px;
-            height: 85px;
-            background: rgba(239, 68, 68, 0.85);
-            border: 4px solid #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            cursor: pointer;
-        }
-        #shoot-btn:active {
-            transform: scale(0.9);
-            background: rgba(220, 38, 38, 1);
-        }
 
-        /* JOYSTICK VIRTUAL IZQUIERDO */
+        /* JOYSTICK REDONDO IZQUIERDO */
         #joystick-base {
             position: absolute;
-            bottom: 40px;
-            left: 40px;
-            width: 120px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            bottom: 30px;
+            left: 30px;
+            width: 130px;
+            height: 130px;
+            background: radial-gradient(circle, rgba(50,50,50,0.4) 0%, rgba(20,20,20,0.6) 100%);
+            border: 3px dashed rgba(255, 255, 255, 0.35);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             touch-action: none;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
+        #joystick-base::before { content: '▲'; position: absolute; top: 5px; color: rgba(255,255,255,0.6); font-size: 12px; }
+        #joystick-base::after { content: '▼'; position: absolute; bottom: 5px; color: rgba(255,255,255,0.6); font-size: 12px; }
+        .joystick-arrow-l { position: absolute; left: 8px; color: rgba(255,255,255,0.6); font-size: 12px; }
+        .joystick-arrow-r { position: absolute; right: 8px; color: rgba(255,255,255,0.6); font-size: 12px; }
+
         #joystick-stick {
-            width: 55px;
-            height: 55px;
-            background: rgba(255, 255, 255, 0.7);
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 100%);
             border: 2px solid #fff;
             border-radius: 50%;
             position: absolute;
             pointer-events: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        /* CONTROLES DERECHOS */
+        .right-controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .action-btn {
+            width: 75px;
+            height: 75px;
+            background: rgba(50, 50, 50, 0.7);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .action-btn:active { transform: scale(0.92); }
+        #shoot-btn {
+            width: 95px;
+            height: 95px;
+            background: rgba(239, 68, 68, 0.9);
+            border: 4px solid #fff;
+            font-size: 36px;
+        }
+        .badge {
+            position: absolute;
+            bottom: 2px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
         }
 
         #minimap {
             position: absolute;
             top: 15px;
-            left: 140px;
+            right: 15px;
             width: 90px;
             height: 90px;
             background: rgba(0, 0, 0, 0.6);
@@ -168,35 +268,69 @@
 <body>
 
     <div id="lobbyScreen" class="screen">
-        <h1>LIGA BOLA: BATTLE ROYALE</h1>
-        <p>Selecciona tu Skin de Countryball:</p>
-        
-        <div class="skins-container">
-            <div class="skin-option selected" style="background: #38bdf8;" onclick="selectSkin('#38bdf8')">🇦🇷</div>
-            <div class="skin-option" style="background: #f87171;" onclick="selectSkin('#f87171')">🇺🇸</div>
-            <div class="skin-option" style="background: #fbbf24;" onclick="selectSkin('#fbbf24')">🇩🇪</div>
+        <div class="mission-panel">
+            <div>
+                <div class="mission-title">OPERACIÓN: LIGA BOLA</div>
+                <div class="mission-progress">Progreso de Misión: 45%</div>
+            </div>
+            <div style="font-size: 12px; color: #facc15;">🎯 Elimina a 100 Bolas</div>
         </div>
 
-        <p>Dificultad:</p>
-        <div>
-            <button class="btn" onclick="startGame('facil')">FÁCIL</button>
-            <button class="btn" onclick="startGame('dificil')">DIFÍCIL</button>
+        <div class="lobby-content">
+            <div class="skins-grid">
+                <div class="skin-item selected" onclick="selectSkin('🇺🇸', '#3b82f6')">🇺🇸</div>
+                <div class="skin-item" onclick="selectSkin('🇲🇽', '#22c55e')">🇲🇽</div>
+                <div class="skin-item" onclick="selectSkin('🇦🇷', '#0ea5e9')">🇦🇷</div>
+                <div class="skin-item" onclick="selectSkin('🇧🇷', '#eab308')">🇧🇷</div>
+                <div class="skin-item" onclick="selectSkin('🇩🇪', '#ef4444')">🇩🇪</div>
+                <div class="skin-item" onclick="selectSkin('🇪🇸', '#f97316')">🇪🇸</div>
+                <div class="skin-item" onclick="selectSkin('🇫🇷', '#6366f1')">🇫🇷</div>
+                <div class="skin-item" onclick="selectSkin('🇯🇵', '#ec4899')">🇯🇵</div>
+                <div class="skin-item" onclick="selectSkin('🇨🇦', '#dc2626')">🇨🇦</div>
+            </div>
+
+            <div class="preview-container">
+                <div id="previewSkinBox" class="preview-ball" style="background: #3b82f6;">
+                    🇺🇸
+                </div>
+                <button class="btn-select" onclick="startGame()">SELECCIONAR</button>
+            </div>
+
+            <div class="difficulty-panel">
+                <div class="diff-btn selected-diff" id="btn-facil" onclick="setDifficulty('facil')">
+                    <span>Partida: FÁCIL</span> ❌
+                </div>
+                <div class="diff-btn" id="btn-dificil" onclick="setDifficulty('dificil')">
+                    <span>Partida: DIFÍCIL</span> ⚔️
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="game-hud" class="hidden">
         <div class="top-left-info hud-element">
-            <div>Vivos: <span id="alive-count">12</span></div>
-            <div>Eliminaciones: <span id="score">0</span></div>
+            <div>❤️ Vida: <span id="player-hp">100</span></div>
+            <div>🏆 Vivos: <span id="alive-count">12</span></div>
+            <div>🎯 Elim.: <span id="score">0</span></div>
         </div>
 
         <div id="minimap" class="hud-element"></div>
 
         <div id="joystick-base" class="hud-element">
+            <span class="joystick-arrow-l">◀</span>
+            <span class="joystick-arrow-r">▶</span>
             <div id="joystick-stick"></div>
         </div>
 
-        <div id="shoot-btn" class="hud-element" ontouchstart="manualShoot()" onmousedown="manualShoot()">🎯</div>
+        <div class="right-controls hud-element">
+            <div class="action-btn" ontouchstart="useMedkit()" onclick="useMedkit()" title="Botiquín">
+                ➕
+                <div class="badge" id="medkit-count">2</div>
+            </div>
+            <div class="action-btn" id="shoot-btn" ontouchstart="manualShoot()" onclick="manualShoot()" title="Disparar">
+                🎯
+            </div>
+        </div>
     </div>
 
     <canvas id="gameCanvas" class="hidden"></canvas>
@@ -205,31 +339,47 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    let playerColor = "#38bdf8";
-    let botSpeed = 1.8;
+    let selectedSkinEmoji = "🇺🇸";
+    let selectedSkinBg = "#3b82f6";
+    let difficultyMode = "facil";
+    let botSpeed = 1.5;
     let score = 0;
+    let playerHp = 100;
+    let medkits = 2;
     let gameRunning = false;
 
     const mapWidth = 2500;
     const mapHeight = 2500;
 
-    let player = { x: 0, y: 0, radius: 24, speed: 4.5 };
+    let player = { x: 0, y: 0, radius: 26, speed: 4.5 };
     let structures = [];
     let bots = [];
     let bullets = [];
 
-    // Control del Joystick
     let joystickActive = false;
     let joystickVector = { x: 0, y: 0 };
 
-    function selectSkin(color) {
-        playerColor = color;
-        document.querySelectorAll('.skin-option').forEach(el => el.classList.remove('selected'));
+    function selectSkin(emoji, color) {
+        selectedSkinEmoji = emoji;
+        selectedSkinBg = color;
+        document.getElementById("previewSkinBox").style.background = color;
+        document.getElementById("previewSkinBox").innerText = emoji;
+        document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('selected'));
         event.target.classList.add('selected');
     }
 
-    function startGame(difficulty) {
-        botSpeed = (difficulty === 'dificil') ? 3.0 : 1.5;
+    function setDifficulty(mode) {
+        difficultyMode = mode;
+        document.getElementById("btn-facil").classList.remove("selected-diff");
+        document.getElementById("btn-dificil").classList.remove("selected-diff");
+        document.getElementById("btn-" + mode).classList.add("selected-diff");
+    }
+
+    function startGame() {
+        botSpeed = (difficultyMode === 'dificil') ? 3.0 : 1.5;
+        playerHp = 100;
+        medkits = 2;
+        score = 0;
 
         document.getElementById("lobbyScreen").classList.add("hidden");
         document.getElementById("game-hud").classList.remove("hidden");
@@ -241,7 +391,6 @@
         player.x = mapWidth / 2;
         player.y = mapHeight / 2;
 
-        // Estructuras de cobertura
         structures = [
             { x: 300, y: 300, width: 140, height: 70 },
             { x: 700, y: 200, width: 80, height: 180 },
@@ -254,14 +403,23 @@
             { x: 1400, y: 1300, width: 160, height: 160 }
         ];
 
-        // Bots enemigos
         bots = [];
+        const botSkins = [
+            { emoji: "🇲🇽", bg: "#22c55e" },
+            { emoji: "🇦🇷", bg: "#0ea5e9" },
+            { emoji: "🇧🇷", bg: "#eab308" },
+            { emoji: "🇩🇪", bg: "#ef4444" },
+            { emoji: "🇫🇷", bg: "#6366f1" }
+        ];
+
         for (let i = 0; i < 12; i++) {
+            let skinInfo = botSkins[Math.floor(Math.random() * botSkins.length)];
             bots.push({
                 x: Math.random() * (mapWidth - 200) + 100,
                 y: Math.random() * (mapHeight - 200) + 100,
-                radius: 24,
-                color: ["#ef4444", "#a855f7", "#3b82f6", "#ec4899"][Math.floor(Math.random() * 4)],
+                radius: 26,
+                emoji: skinInfo.emoji,
+                color: skinInfo.bg,
                 alive: true
             });
         }
@@ -308,11 +466,13 @@
         base.addEventListener("touchend", handleEnd);
 
         base.addEventListener("mousedown", (e) => {
-            window.addEventListener("mousemove", handleStartMove);
-            window.addEventListener("mouseup", () => {
-                window.removeEventListener("mousemove", handleStartMove);
+            const onMouseMove = (ev) => handleStartMove(ev);
+            const onMouseUp = () => {
+                window.removeEventListener("mousemove", onMouseMove);
                 handleEnd();
-            }, { once: true });
+            };
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp, { once: true });
         });
     }
 
@@ -338,10 +498,18 @@
         });
     }
 
+    function useMedkit() {
+        if (medkits > 0 && playerHp < 100) {
+            medkits--;
+            playerHp = Math.min(100, playerHp + 40);
+            document.getElementById("player-hp").innerText = playerHp;
+            document.getElementById("medkit-count").innerText = medkits;
+        }
+    }
+
     function update() {
         if (!gameRunning) return;
 
-        // Moverse usando el joystick izquierdo
         if (joystickActive && (joystickVector.x !== 0 || joystickVector.y !== 0)) {
             let nextX = player.x + joystickVector.x * player.speed;
             let nextY = player.y + joystickVector.y * player.speed;
@@ -370,6 +538,17 @@
                 let angle = Math.atan2(player.y - bot.y, player.x - bot.x);
                 let nextBotX = bot.x + Math.cos(angle) * botSpeed;
                 let nextBotY = bot.y + Math.sin(angle) * botSpeed;
+
+                let distToPlayer = Math.hypot(player.x - bot.x, player.y - bot.y);
+                if (distToPlayer < player.radius + bot.radius) {
+                    playerHp -= 0.5;
+                    document.getElementById("player-hp").innerText = Math.max(0, Math.floor(playerHp));
+                    if (playerHp <= 0) {
+                        gameRunning = false;
+                        alert("¡Has sido eliminado! Fin de la partida.");
+                        location.reload();
+                    }
+                }
 
                 let botCollide = false;
                 structures.forEach(s => {
@@ -403,72 +582,4 @@
         });
     }
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        ctx.save();
-        let cameraX = canvas.width / 2 - player.x;
-        let cameraY = canvas.height / 2 - player.y;
-        ctx.translate(cameraX, cameraY);
-
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
-        ctx.lineWidth = 2;
-        for (let x = 0; x < mapWidth; x += 100) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, mapHeight); ctx.stroke();
-        }
-        for (let y = 0; y < mapHeight; y += 100) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(mapWidth, y); ctx.stroke();
-        }
-
-        structures.forEach(s => {
-            ctx.fillStyle = "#334155";
-            ctx.fillRect(s.x, s.y, s.width, s.height);
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = "#1e293b";
-            ctx.strokeRect(s.x, s.y, s.width, s.height);
-        });
-
-        bots.forEach(bot => {
-            if (bot.alive) {
-                ctx.beginPath();
-                ctx.arc(bot.x, bot.y, bot.radius, 0, Math.PI * 2);
-                ctx.fillStyle = bot.color;
-                ctx.fill();
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = "#000";
-                ctx.stroke();
-                ctx.closePath();
-            }
-        });
-
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-        ctx.fillStyle = playerColor;
-        ctx.fill();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#000";
-        ctx.stroke();
-        ctx.closePath();
-
-        ctx.fillStyle = "#facc15";
-        bullets.forEach(b => {
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.closePath();
-        });
-
-        ctx.restore();
-    }
-
-    function loop() {
-        if (gameRunning) {
-            update();
-            draw();
-            requestAnimationFrame(loop);
-        }
-    }
-</script>
-
-</body>
-</html>
+    function drawCountry
