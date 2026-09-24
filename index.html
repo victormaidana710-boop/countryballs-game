@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Liga Bola - Battle Royale</title>
+    <title>Liga Bola - Battle Royale HD</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -15,7 +15,6 @@
             color: white;
         }
 
-        /* LOBBY IDÉNTICO A LA REFERENCIA */
         .screen {
             position: absolute;
             top: 0;
@@ -31,17 +30,18 @@
         .hidden { display: none !important; }
 
         .mission-panel {
-            background: rgba(30, 41, 59, 0.9);
+            background: rgba(30, 41, 59, 0.95);
             border: 2px solid #475569;
-            border-radius: 10px;
-            padding: 10px 15px;
+            border-radius: 12px;
+            padding: 12px 18px;
             margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
-        .mission-title { font-size: 14px; font-weight: bold; color: #facc15; }
-        .mission-progress { font-size: 12px; color: #94a3b8; }
+        .mission-title { font-size: 15px; font-weight: bold; color: #facc15; }
+        .mission-progress { font-size: 13px; color: #94a3b8; }
 
         .lobby-content {
             display: flex;
@@ -51,38 +51,38 @@
             justify-content: space-between;
         }
 
-        /* Cuadrícula de Skins / Países */
         .skins-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            background: rgba(15, 23, 42, 0.8);
-            padding: 12px;
-            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 15px;
+            border-radius: 14px;
             border: 2px solid #334155;
-            max-height: 320px;
+            max-height: 340px;
             overflow-y: auto;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
         }
         .skin-item {
-            width: 55px;
-            height: 55px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             border: 3px solid #475569;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 26px;
             background: #1e293b;
             transition: transform 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .skin-item.selected {
             border-color: #facc15;
             transform: scale(1.15);
-            box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.8);
         }
 
-        /* Zona central de vista previa del personaje seleccionado */
         .preview-container {
             flex: 1;
             display: flex;
@@ -90,42 +90,37 @@
             align-items: center;
             justify-content: center;
         }
-        .preview-ball {
-            width: 140px;
-            height: 140px;
+        
+        /* Contenedor HD para la vista previa */
+        .preview-ball-hd {
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #60a5fa 0%, #1d4ed8 70%, #1e3a8a 100%);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.7), inset -8px -8px 20px rgba(0,0,0,0.5), inset 6px 6px 15px rgba(255,255,255,0.4);
+            border: 4px solid #1e293b;
+            position: relative;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            border: 5px solid #334155;
-            position: relative;
-            margin-bottom: 20px;
-            font-size: 45px;
-        }
-        /* Gafas de sol para la vista previa */
-        .preview-ball::after {
-            content: '🕶️';
-            position: absolute;
-            font-size: 55px;
         }
 
         .btn-select {
             background: linear-gradient(135deg, #eab308, #ca8a04);
             color: #0f172a;
             border: none;
-            padding: 14px 40px;
+            padding: 15px 45px;
             font-size: 18px;
             font-weight: 900;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+            box-shadow: 0 6px 20px rgba(234, 179, 8, 0.5);
             letter-spacing: 1px;
             border: 2px solid #fef08a;
         }
         .btn-select:active { transform: scale(0.95); }
 
-        /* Panel derecho de botones de dificultad */
         .difficulty-panel {
             display: flex;
             flex-direction: column;
@@ -136,26 +131,27 @@
             background: #1e293b;
             color: white;
             border: 2px solid #475569;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
             text-align: left;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .diff-btn.selected-diff {
             border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239, 68, 68, 0.2);
         }
 
         canvas {
             display: block;
-            background: #15803d;
+            background: #166534;
         }
 
-        /* HUD FLOTANTE DEL JUEGO */
+        /* HUD FLOTANTE HD */
         #game-hud {
             position: absolute;
             top: 0;
@@ -170,98 +166,102 @@
             position: absolute;
             top: 15px;
             left: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px 15px;
-            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 12px 18px;
+            border-radius: 10px;
             font-size: 14px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        /* JOYSTICK REDONDO IZQUIERDO */
+        /* JOYSTICK HD */
         #joystick-base {
             position: absolute;
             bottom: 30px;
             left: 30px;
             width: 130px;
             height: 130px;
-            background: radial-gradient(circle, rgba(50,50,50,0.4) 0%, rgba(20,20,20,0.6) 100%);
-            border: 3px dashed rgba(255, 255, 255, 0.35);
+            background: radial-gradient(circle, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.8) 100%);
+            border: 3px solid rgba(255, 255, 255, 0.25);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             touch-action: none;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
         }
-        #joystick-base::before { content: '▲'; position: absolute; top: 5px; color: rgba(255,255,255,0.6); font-size: 12px; }
-        #joystick-base::after { content: '▼'; position: absolute; bottom: 5px; color: rgba(255,255,255,0.6); font-size: 12px; }
-        .joystick-arrow-l { position: absolute; left: 8px; color: rgba(255,255,255,0.6); font-size: 12px; }
-        .joystick-arrow-r { position: absolute; right: 8px; color: rgba(255,255,255,0.6); font-size: 12px; }
+        #joystick-base::before { content: '▲'; position: absolute; top: 8px; color: rgba(255,255,255,0.6); font-size: 11px; }
+        #joystick-base::after { content: '▼'; position: absolute; bottom: 8px; color: rgba(255,255,255,0.6); font-size: 11px; }
+        .joystick-arrow-l { position: absolute; left: 10px; color: rgba(255,255,255,0.6); font-size: 11px; }
+        .joystick-arrow-r { position: absolute; right: 10px; color: rgba(255,255,255,0.6); font-size: 11px; }
 
         #joystick-stick {
-            width: 50px;
-            height: 50px;
-            background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 100%);
+            width: 55px;
+            height: 55px;
+            background: radial-gradient(circle at 30% 30%, #ffffff 0%, #cbd5e1 60%, #64748b 100%);
             border: 2px solid #fff;
             border-radius: 50%;
             position: absolute;
             pointer-events: none;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
-        /* CONTROLES DERECHOS */
+        /* CONTROLES DERECHOS HD */
         .right-controls {
             position: absolute;
             bottom: 30px;
             right: 30px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 18px;
         }
         .action-btn {
             width: 75px;
             height: 75px;
-            background: rgba(50, 50, 50, 0.7);
-            border: 3px solid rgba(255, 255, 255, 0.4);
+            background: rgba(30, 41, 59, 0.85);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            font-size: 30px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
             position: relative;
         }
         .action-btn:active { transform: scale(0.92); }
         #shoot-btn {
             width: 95px;
             height: 95px;
-            background: rgba(239, 68, 68, 0.9);
+            background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
             border: 4px solid #fff;
-            font-size: 36px;
+            font-size: 38px;
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.6);
         }
         .badge {
             position: absolute;
             bottom: 2px;
             right: 5px;
-            background: rgba(0, 0, 0, 0.8);
+            background: #0f172a;
             color: #fff;
             font-size: 12px;
-            padding: 2px 6px;
+            padding: 2px 7px;
             border-radius: 10px;
             font-weight: bold;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         #minimap {
             position: absolute;
             top: 15px;
             right: 15px;
-            width: 90px;
-            height: 90px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid rgba(255,255,255,0.3);
+            width: 100px;
+            height: 100px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 2px solid rgba(255,255,255,0.25);
             border-radius: 50%;
             overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -270,38 +270,38 @@
     <div id="lobbyScreen" class="screen">
         <div class="mission-panel">
             <div>
-                <div class="mission-title">OPERACIÓN: LIGA BOLA</div>
-                <div class="mission-progress">Progreso de Misión: 45%</div>
+                <div class="mission-title">⭐ LIGA BOLA: BATTLE ROYALE HD</div>
+                <div class="mission-progress">Modo Gráfico: Alta Definición</div>
             </div>
-            <div style="font-size: 12px; color: #facc15;">🎯 Elimina a 100 Bolas</div>
+            <div style="font-size: 13px; color: #facc15;">🎯 Supervivencia Activa</div>
         </div>
 
         <div class="lobby-content">
             <div class="skins-grid">
-                <div class="skin-item selected" onclick="selectSkin('🇺🇸', '#3b82f6')">🇺🇸</div>
-                <div class="skin-item" onclick="selectSkin('🇲🇽', '#22c55e')">🇲🇽</div>
-                <div class="skin-item" onclick="selectSkin('🇦🇷', '#0ea5e9')">🇦🇷</div>
-                <div class="skin-item" onclick="selectSkin('🇧🇷', '#eab308')">🇧🇷</div>
-                <div class="skin-item" onclick="selectSkin('🇩🇪', '#ef4444')">🇩🇪</div>
-                <div class="skin-item" onclick="selectSkin('🇪🇸', '#f97316')">🇪🇸</div>
-                <div class="skin-item" onclick="selectSkin('🇫🇷', '#6366f1')">🇫🇷</div>
-                <div class="skin-item" onclick="selectSkin('🇯🇵', '#ec4899')">🇯🇵</div>
-                <div class="skin-item" onclick="selectSkin('🇨🇦', '#dc2626')">🇨🇦</div>
+                <div class="skin-item selected" onclick="selectSkin('US', '#3b82f6', '#1e3a8a')">🇺🇸</div>
+                <div class="skin-item" onclick="selectSkin('MX', '#22c55e', '#14532d')">🇲🇽</div>
+                <div class="skin-item" onclick="selectSkin('AR', '#0ea5e9', '#0369a1')">🇦🇷</div>
+                <div class="skin-item" onclick="selectSkin('BR', '#eab308', '#a16207')">🇧🇷</div>
+                <div class="skin-item" onclick="selectSkin('DE', '#ef4444', '#7f1d1d')">🇩🇪</div>
+                <div class="skin-item" onclick="selectSkin('ES', '#f97316', '#c2410c')">🇪🇸</div>
+                <div class="skin-item" onclick="selectSkin('FR', '#6366f1', '#3730a3')">🇫🇷</div>
+                <div class="skin-item" onclick="selectSkin('JP', '#ec4899', '#be185d')">🇯🇵</div>
+                <div class="skin-item" onclick="selectSkin('CA', '#dc2626', '#991b1b')">🇨🇦</div>
             </div>
 
             <div class="preview-container">
-                <div id="previewSkinBox" class="preview-ball" style="background: #3b82f6;">
-                    🇺🇸
+                <div id="previewBall" class="preview-ball-hd">
+                    <span style="font-size: 55px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">😎</span>
                 </div>
                 <button class="btn-select" onclick="startGame()">SELECCIONAR</button>
             </div>
 
             <div class="difficulty-panel">
                 <div class="diff-btn selected-diff" id="btn-facil" onclick="setDifficulty('facil')">
-                    <span>Partida: FÁCIL</span> ❌
+                    <span>Partida: FÁCIL</span> 🟢
                 </div>
                 <div class="diff-btn" id="btn-dificil" onclick="setDifficulty('dificil')">
-                    <span>Partida: DIFÍCIL</span> ⚔️
+                    <span>Partida: DIFÍCIL</span> 🔴
                 </div>
             </div>
         </div>
@@ -339,8 +339,9 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    let selectedSkinEmoji = "🇺🇸";
-    let selectedSkinBg = "#3b82f6";
+    let currentSkinCode = "US";
+    let skinColor1 = "#3b82f6";
+    let skinColor2 = "#1e3a8a";
     let difficultyMode = "facil";
     let botSpeed = 1.5;
     let score = 0;
@@ -351,7 +352,7 @@
     const mapWidth = 2500;
     const mapHeight = 2500;
 
-    let player = { x: 0, y: 0, radius: 26, speed: 4.5 };
+    let player = { x: 0, y: 0, radius: 28, speed: 4.5 };
     let structures = [];
     let bots = [];
     let bullets = [];
@@ -359,11 +360,11 @@
     let joystickActive = false;
     let joystickVector = { x: 0, y: 0 };
 
-    function selectSkin(emoji, color) {
-        selectedSkinEmoji = emoji;
-        selectedSkinBg = color;
-        document.getElementById("previewSkinBox").style.background = color;
-        document.getElementById("previewSkinBox").innerText = emoji;
+    function selectSkin(code, c1, c2) {
+        currentSkinCode = code;
+        skinColor1 = c1;
+        skinColor2 = c2;
+        document.getElementById("previewBall").style.background = `radial-gradient(circle at 35% 35%, ${c1} 0%, ${c2} 100%)`;
         document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('selected'));
         event.target.classList.add('selected');
     }
@@ -385,8 +386,11 @@
         document.getElementById("game-hud").classList.remove("hidden");
         canvas.classList.remove("hidden");
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Ajuste de escala HD para pantallas de alta resolución (Retina/FHD móviles)
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        ctx.scale(dpr, dpr);
 
         player.x = mapWidth / 2;
         player.y = mapHeight / 2;
@@ -404,22 +408,23 @@
         ];
 
         bots = [];
-        const botSkins = [
-            { emoji: "🇲🇽", bg: "#22c55e" },
-            { emoji: "🇦🇷", bg: "#0ea5e9" },
-            { emoji: "🇧🇷", bg: "#eab308" },
-            { emoji: "🇩🇪", bg: "#ef4444" },
-            { emoji: "🇫🇷", bg: "#6366f1" }
+        const botPalettes = [
+            { code: "MX", c1: "#22c55e", c2: "#14532d" },
+            { code: "AR", c1: "#0ea5e9", c2: "#0369a1" },
+            { code: "BR", c1: "#eab308", c2: "#a16207" },
+            { code: "DE", c1: "#ef4444", c2: "#7f1d1d" },
+            { code: "FR", c1: "#6366f1", c2: "#3730a3" }
         ];
 
         for (let i = 0; i < 12; i++) {
-            let skinInfo = botSkins[Math.floor(Math.random() * botSkins.length)];
+            let pal = botPalettes[Math.floor(Math.random() * botPalettes.length)];
             bots.push({
                 x: Math.random() * (mapWidth - 200) + 100,
                 y: Math.random() * (mapHeight - 200) + 100,
-                radius: 26,
-                emoji: skinInfo.emoji,
-                color: skinInfo.bg,
+                radius: 28,
+                code: pal.code,
+                c1: pal.c1,
+                c2: pal.c2,
                 alive: true
             });
         }
@@ -493,8 +498,8 @@
         let angle = closestBot ? Math.atan2(closestBot.y - player.y, closestBot.x - player.x) : 0;
         bullets.push({
             x: player.x, y: player.y,
-            dx: Math.cos(angle) * 10, dy: Math.sin(angle) * 10,
-            radius: 6, isPlayer: true
+            dx: Math.cos(angle) * 12, dy: Math.sin(angle) * 12,
+            radius: 7, isPlayer: true
         });
     }
 
@@ -541,7 +546,7 @@
 
                 let distToPlayer = Math.hypot(player.x - bot.x, player.y - bot.y);
                 if (distToPlayer < player.radius + bot.radius) {
-                    playerHp -= 0.5;
+                    playerHp -= 0.6;
                     document.getElementById("player-hp").innerText = Math.max(0, Math.floor(playerHp));
                     if (playerHp <= 0) {
                         gameRunning = false;
@@ -558,28 +563,4 @@
                     }
                 });
 
-                if (!botCollide) {
-                    bot.x = nextBotX;
-                    bot.y = nextBotY;
-                }
-            }
-        });
-
-        document.getElementById("alive-count").innerText = aliveBotsCount + 1;
-
-        bullets.forEach((b, index) => {
-            b.x += b.dx;
-            b.y += b.dy;
-
-            bots.forEach(bot => {
-                if (bot.alive && b.isPlayer && Math.hypot(b.x - bot.x, b.y - bot.y) < bot.radius + b.radius) {
-                    bot.alive = false;
-                    score += 1;
-                    document.getElementById("score").innerText = score;
-                    bullets.splice(index, 1);
-                }
-            });
-        });
-    }
-
-    function drawCountry
+                i
