@@ -89,7 +89,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Permite tocar el canvas debajo */
+            pointer-events: none;
             z-index: 10;
         }
         .hud-element {
@@ -105,22 +105,7 @@
             font-size: 14px;
             border: 1px solid rgba(255,255,255,0.1);
         }
-        .top-right-info {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            display: flex;
-            gap: 10px;
-        }
-        .hud-box {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: bold;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        /* Botón de disparo flotante derecho tipo Free Fire */
+        /* Botón de disparo flotante derecho */
         #shoot-btn {
             position: absolute;
             bottom: 40px;
@@ -141,7 +126,32 @@
             transform: scale(0.9);
             background: rgba(220, 38, 38, 1);
         }
-        /* Minimapa simulado arriba a la izquierda */
+
+        /* JOYSTICK VIRTUAL IZQUIERDO */
+        #joystick-base {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+        }
+        #joystick-stick {
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            position: absolute;
+            pointer-events: none;
+        }
+
         #minimap {
             position: absolute;
             top: 15px;
@@ -153,18 +163,10 @@
             border-radius: 50%;
             overflow: hidden;
         }
-        .dot {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: red;
-            border-radius: 50%;
-        }
     </style>
 </head>
 <body>
 
-    <!-- LOBBY -->
     <div id="lobbyScreen" class="screen">
         <h1>LIGA BOLA: BATTLE ROYALE</h1>
         <p>Selecciona tu Skin de Countryball:</p>
@@ -182,7 +184,6 @@
         </div>
     </div>
 
-    <!-- HUD FLOTANTE DURANTE LA PARTIDA -->
     <div id="game-hud" class="hidden">
         <div class="top-left-info hud-element">
             <div>Vivos: <span id="alive-count">12</span></div>
@@ -191,11 +192,10 @@
 
         <div id="minimap" class="hud-element"></div>
 
-        <div class="top-right-info hud-element">
-            <div class="hud-box">🔴 ZONA SEGURA</div>
+        <div id="joystick-base" class="hud-element">
+            <div id="joystick-stick"></div>
         </div>
 
-        <!-- Botón de disparo flotante -->
         <div id="shoot-btn" class="hud-element" ontouchstart="manualShoot()" onmousedown="manualShoot()">🎯</div>
     </div>
 
@@ -217,7 +217,10 @@
     let structures = [];
     let bots = [];
     let bullets = [];
-    let touchX = 0, touchY = 0, isTouching = false;
+
+    // Control del Joystick
+    let joystickActive = false;
+    let joystickVector = { x: 0, y: 0 };
 
     function selectSkin(color) {
         playerColor = color;
@@ -237,8 +240,6 @@
 
         player.x = mapWidth / 2;
         player.y = mapHeight / 2;
-        touchX = player.x;
-        touchY = player.y;
 
         // Estructuras de cobertura
         structures = [
@@ -265,26 +266,56 @@
             });
         }
 
+        setupJoystick();
         gameRunning = true;
         loop();
     }
 
-    window.addEventListener("pointerdown", (e) => { 
-        if (e.target.id === 'shoot-btn') return;
-        isTouching = true; 
-        updateTouch(e); 
-    });
-    window.addEventListener("pointermove", (e) => { if (isTouching) updateTouch(e); });
-    window.addEventListener("pointerup", () => { isTouching = false; });
+    function setupJoystick() {
+        const base = document.getElementById("joystick-base");
+        const stick = document.getElementById("joystick-stick");
+        const maxDist = 45;
 
-    function updateTouch(e) {
-        const offsetX = player.x - canvas.width / 2;
-        const offsetY = player.y - canvas.height / 2;
-        touchX = e.clientX + offsetX;
-        touchY = e.clientY + offsetY;
+        function handleStartMove(e) {
+            e.preventDefault();
+            const rect = base.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            let touch = e.touches ? e.touches[0] : e;
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            let dist = Math.hypot(dx, dy);
+
+            if (dist > maxDist) {
+                dx = (dx / dist) * maxDist;
+                dy = (dy / dist) * maxDist;
+            }
+
+            stick.style.transform = `translate(${dx}px, ${dy}px)`;
+            joystickVector = { x: dx / maxDist, y: dy / maxDist };
+            joystickActive = true;
+        }
+
+        function handleEnd() {
+            stick.style.transform = `translate(0px, 0px)`;
+            joystickVector = { x: 0, y: 0 };
+            joystickActive = false;
+        }
+
+        base.addEventListener("touchstart", handleStartMove);
+        base.addEventListener("touchmove", handleStartMove);
+        base.addEventListener("touchend", handleEnd);
+
+        base.addEventListener("mousedown", (e) => {
+            window.addEventListener("mousemove", handleStartMove);
+            window.addEventListener("mouseup", () => {
+                window.removeEventListener("mousemove", handleStartMove);
+                handleEnd();
+            }, { once: true });
+        });
     }
 
-    // Disparo manual con el botón flotante o automático hacia el más cercano
     function manualShoot() {
         let closestBot = null;
         let minDist = Infinity;
@@ -310,10 +341,10 @@
     function update() {
         if (!gameRunning) return;
 
-        if (isTouching) {
-            let angle = Math.atan2(touchY - player.y, touchX - player.x);
-            let nextX = player.x + Math.cos(angle) * player.speed;
-            let nextY = player.y + Math.sin(angle) * player.speed;
+        // Moverse usando el joystick izquierdo
+        if (joystickActive && (joystickVector.x !== 0 || joystickVector.y !== 0)) {
+            let nextX = player.x + joystickVector.x * player.speed;
+            let nextY = player.y + joystickVector.y * player.speed;
 
             nextX = Math.max(player.radius, Math.min(mapWidth - player.radius, nextX));
             nextY = Math.max(player.radius, Math.min(mapHeight - player.radius, nextY));
